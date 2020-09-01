@@ -1,14 +1,21 @@
+/**
+ * @author: xingjun.xyf
+ * @contact: deathmemory@163.com
+ * @file: AntiDexLoader.js
+ * @time: 2020/4/16 5:03 PM
+ * @desc:
+ */
+
 import {DMLog} from "./utils/dmlog";
-import {AntiDebug} from "./utils/android/anti/AntiDebug";
-import {AndOperations} from "./utils/android/andOperations";
-const and = require('./utils/android/*');
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer');
+    // FCAnd.AndOpts.getLR(null);
+    // FCAnd.Anti.anti_ptrace();
+    // FCAnd.Anti.anti_fgets();
+    // and.anti.Anti.anti_fgets();
 
-    AntiDebug.anti_ptrace();
-    AntiDebug.anti_fgets();
-    // and.anti.AntiDebug.anti_fgets();
+    FCAnd.Anti.anti_fgets();
 }
 
 Java.perform(function () {
