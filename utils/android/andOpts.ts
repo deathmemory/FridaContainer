@@ -195,8 +195,8 @@ namespace FCAnd {
             }
         }
 
-        static unpack_common() {
-            fridaUnpack.unpack_common();
+        static dump_dex_common() {
+            fridaUnpack.dump_dex_common();
         }
 
         static traceLoadlibrary() {
@@ -236,12 +236,22 @@ namespace FCAnd {
             }
         }
 
+        /**
+         * 写内存
+         * @param {NativePointer} addr
+         * @param {string} str
+         */
         static writeMemory(addr: NativePointer, str: string) {
             Memory.protect(addr, str.length, 'rwx');
             addr.writeAnsiString(str);
 
         }
 
+        /**
+         * 将 js object 转换成 Java String
+         * @param res
+         * @returns {any}
+         */
         static newString(res: any) {
             const String = Java.use('java.lang.String');
             return String.$new(res);

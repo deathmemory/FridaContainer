@@ -9,7 +9,7 @@
 namespace FCAnd {
     const DMLog = require("../dmlog");
     const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
-
+    const ssl_pinning_pass = require("../../utils/android/repinning");
 
     export class Anti {
 
@@ -154,6 +154,10 @@ namespace FCAnd {
                     return -1;
                 },'int', []));
             }
+        }
+
+        static anti_sslPinning(cerPath: string) {
+            ssl_pinning_pass(cerPath);
         }
     }
 }

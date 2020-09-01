@@ -9,7 +9,7 @@
 
 
 
-function ssl_pinning_pass (){
+function ssl_pinning_pass (cerPath){
     Java.perform(function (){
     	console.log("");
         console.log("[.] Cert Pinning Bypass/Re-Pinning");
@@ -27,7 +27,7 @@ function ssl_pinning_pass (){
 	    cf = CertificateFactory.getInstance("X.509");
 
 	    try {
-	    	var fileInputStream = FileInputStream.$new("/data/local/tmp/cert-der.crt");
+	    	var fileInputStream = FileInputStream.$new(cerPath);	// "/data/local/tmp/cert-der.crt"
 	    	console.log("[i] fileInputStream: " + fileInputStream);
 	    }
 	    catch(err) {
