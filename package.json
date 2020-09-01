@@ -1,0 +1,17 @@
+{
+  "name": "fridaContainer",
+  "version": "1.0.0",
+  "description": "fridaContainer written in TypeScript and JavaScript",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "frida-compile index.ts -o _agent.js",
+    "watch": "frida-compile index.ts -o _agent.js -w"
+  },
+  "devDependencies": {
+    "@types/frida-gum": "^15.0.0",
+    "@types/node": "^13.7.0",
+    "frida-compile": "^9.1.0"
+  }
+}
