@@ -5,8 +5,8 @@
  * @time: 2020/4/16 5:03 PM
  * @desc:
  */
-
 import {DMLog} from "./utils/dmlog";
+import {FCAnd} from "./utils/FCAnd";
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer');
@@ -15,10 +15,10 @@ function main() {
     // FCAnd.Anti.anti_fgets();
     // and.anti.Anti.anti_fgets();
 
-    FCAnd.Anti.anti_fgets();
-    FCAnd.AndOpts.showStacks();
-    FCAnd.AndOpts.dump_dex_common();
-    FCAnd.Anti.anti_sslPinning("/data/local/tmp/cert-der.crt");
+    FCAnd.anti.anti_debug();
+    // FCAnd.AndOpts.showStacks();
+    // FCAnd.AndOpts.dump_dex_common();
+    // FCAnd.Anti.anti_sslPinning("/data/local/tmp/cert-der.crt");
 }
 
 Java.perform(function () {
