@@ -78,22 +78,21 @@ export class Anti {
             var bufstr = (buffer as NativePointer).readCString();
             var buf_str;
 
-            // console.log("hello" );
             if (null != bufstr) {
                 if (bufstr.indexOf("TracerPid:") > -1) {
                     buffer.writeUtf8String("TracerPid:\t0");
                     // dmLogout("tracerpid replaced: " + Memory.readUtf8String(buffer));
-                    console.log("TracePid_res:" + buffer.readCString() + ' lr: ' + lr);
+                    DMLog.i('anti_fgets', "TracePid_res:" + buffer.readCString() + ' lr: ' + lr);
                 }
                 //State:	S (sleeping)
                 if(bufstr.indexOf("State:\tt (tracing stop)") > -1){
                     buffer.writeUtf8String("State:\tS (sleeping)");
-                    console.log("State_res:" + buffer.readCString());
+                    DMLog.i('anti_fgets', "State_res:" + buffer.readCString());
                 }
 
                 if(bufstr.indexOf("ptrace_stop") > -1){
                     buffer.writeUtf8String("sys_epoll_wait");
-                    console.log("wchan_res:" + buffer.readCString());
+                    DMLog.i('anti_fgets', "wchan_res:" + buffer.readCString());
                 }
 
                 var state_name = "";
@@ -104,14 +103,14 @@ export class Anti {
                     if(bufstr.indexOf(name_t) > -1){
                         buf_str = bufstr;
                         buffer.writeUtf8String(buf_str.replace(name_t, name_s));
-                        console.log("stat_res:" + buffer.readCString());
+                        DMLog.i('anti_fgets', "stat_res:" + buffer.readCString());
                     }
                 }
 
                 // SigBlk
                 if (bufstr.indexOf('SigBlk:') > -1) {
                     buffer.writeUtf8String('SigBlk:\t0000000000001000');
-                    console.log("SigBlk_res:" + buffer.readCString());
+                    DMLog.i('anti_fgets', "SigBlk_res:" + buffer.readCString());
                 }
             }
 
