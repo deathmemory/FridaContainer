@@ -172,6 +172,25 @@ export class AndOpts {
     }
 
     /**
+     * 根据地址获取所在 module 的信息
+     * @param {NativePointer} fnPtr
+     * @returns {(any)[]}
+     */
+    static getModuleInfoByPtr(fnPtr: NativePointer) {
+        var modules = Process.enumerateModules();
+        var modname = null, base = null;
+        modules.forEach(function (mod) {
+            if (mod.base <= fnPtr && fnPtr.toInt32() <= mod.base.toInt32() + mod.size) {
+                modname = mod.name;
+                base = mod.base;
+                return false;
+            }
+        });
+        return [modname, base];
+    }
+
+
+    /**
      * 打印指定层数的 sp，并指向 so (如果有）
      * @param {CpuContext} context
      * @param {number} number
