@@ -6,10 +6,10 @@ FridaContainer 集成了网上流行的和自己编写的常用脚本 frida 脚�
 ## 编译和使用
 
 ```sh
-$ git clone git://xxx.git
-$ cd xxx/
+$ git clone https://github.com/deathmemory/FridaContainer.git
+$ cd FridaContainer/
 $ npm install
-$ frida -U -f com.example.android --no-pause -l fc_agent.js
+$ frida -U -f com.example.android --no-pause -l _fcagent.js
 ```
 
 ## 开发实时编译
@@ -19,6 +19,8 @@ $ npm run watch
 ```
 
 ## 功能简介
+
+本仓库会持续补充更新。
 
 ### Android 
 
@@ -38,8 +40,6 @@ $ npm run watch
 
 1. 便捷的获取函数地址
 2. 打印堆栈
-
-更多方法等待发掘！
 
 ## 感谢
 [todo 引用参考]

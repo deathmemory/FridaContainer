@@ -150,6 +150,11 @@ export class AndOpts {
         };
     }
 
+    /**
+     * 获取 LR 寄存器值
+     * @param {CpuContext} context
+     * @returns {NativePointer}
+     */
     static getLR(context: CpuContext) {
         if (Process.arch == 'arm') {
             return (context as ArmCpuContext).lr;
@@ -160,6 +165,11 @@ export class AndOpts {
         return ptr(0);
     }
 
+    /**
+     * 获取模块地址
+     * @param {NativePointer} addr
+     * @returns {string}
+     */
     static getModuleByAddr(addr: NativePointer) {
         var result = 'null';
         Process.enumerateModules().forEach(function (module: Module) {

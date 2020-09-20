@@ -50,3 +50,11 @@ FCAnd.jni.hook_registNatives();
 
 该功能拆分出了一个独立模块，使用频率高的朋友可以使用独立模块
 地址：https://github.com/deathmemory/fridaRegstNtv
+
+## 其它
+
+1. 根据地址获取所在 module 的信息
+2. 获取模块地址
+3. 获取 LR 寄存器值
+4. 现成的 Hook url/json/map ...
+
