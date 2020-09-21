@@ -1,6 +1,6 @@
 # FridaContainer
 
-FridaContainer 集成了网上流行的和自己编写的常用脚本 frida 脚本，为逆向工作提效之用。
+FridaContainer 集成了网上流行的和自己编写的常用的 frida 脚本，为逆向工作提效之用。
 
 
 ## 编译和使用
