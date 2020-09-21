@@ -11,7 +11,7 @@ import {MT} from "./agent/mt/mt";
 import {DianPing} from "./agent/dp/dp";
 
 function main() {
-    DMLog.d('MAIN', 'HELLO FridaContainer');
+    DMLog.d('MAIN', 'HELLO FridaContainer, please add code on the index.ts');
     // FCAnd.AndOpts.getLR(null);
     // FCAnd.Anti.anti_ptrace();
     // FCAnd.Anti.anti_fgets();
@@ -21,7 +21,6 @@ function main() {
     /// mt
     // DianPing.anti_debug();
     // DianPing.hook_cx_stacks();
-    DianPing.modify_devinfo();
     ///
     // FCAnd.AndOpts.showStacks();
     // FCAnd.AndOpts.dump_dex_common();
