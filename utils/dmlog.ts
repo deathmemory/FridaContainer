@@ -12,6 +12,6 @@ export class DMLog {
     }
 
     static log_(leval: String, tag: String, str: String) {
-        console.log('[' + leval + '][' + tag + ']: ' + str);
+        console.log('[' + leval + '][' + new Date().toLocaleString('zh-CN') + '][' + tag + ']: ' + str);
     }
 }
