@@ -6,19 +6,15 @@
  * @desc:
  */
 import {DMLog} from "./utils/dmlog";
-import {FCAnd} from "./utils/FCAnd";
-import {MT} from "./agent/mt/mt";
-import {DianPing} from "./agent/dp/dp";
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer, please add code on the index.ts');
-    // FCAnd.AndOpts.getLR(null);
     // FCAnd.Anti.anti_ptrace();
     // FCAnd.Anti.anti_fgets();
     // and.anti.Anti.anti_fgets();
 
     // FCAnd.anti.anti_debug();
-    /// mt
+    /// dp
     // DianPing.anti_debug();
     // DianPing.hook_cx_stacks();
     ///

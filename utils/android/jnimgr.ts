@@ -5,9 +5,9 @@
  * @time: 2020/6/18 5:14 PM
  * @desc:
  */
-import {FCAnd} from "../FCAnd";
+import {FCCommon} from "../FCCommon"
+import {DMLog} from "../dmlog";
 
-const DMLog = require("../dmlog");
 const jni = require('./jni_struct');
 
 export class Jni {
@@ -20,7 +20,7 @@ export class Jni {
     }
 
     static hookJNI(name: string, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback,
-        data?: NativePointerValue) {
+                   data?: NativePointerValue) {
         const addr = Jni.getJNIAddr(name);
         return Interceptor.attach(addr, callbacksOrProbe);
     }
@@ -54,17 +54,22 @@ export class Jni {
 
                     var idx = i * p_size * 3;
                     var fnPtr = methods.add(idx + p_size * 2).readPointer();
-                    const infoArr = FCAnd.andOpts.getModuleInfoByPtr(fnPtr);
-                    const modulename = infoArr[0];
-                    const modulebase = infoArr[1];
-                    var logstr = "name: " + methods.add(idx).readPointer().readCString()
-                        + ", signature: " + methods.add(idx + p_size).readPointer().readCString()
-                        + ", fnPtr: " + fnPtr
-                        + ", modulename: " + modulename + " -> base: " + modulebase;
-                    if (null != modulebase) {
-                        logstr += ", offset: " + fnPtr.sub(modulebase);
+                    const module = FCCommon.getModuleByAddr(fnPtr);
+                    if (module) {
+                        const modulename = module.name;
+                        const modulebase = module.base;
+                        var logstr = "name: " + methods.add(idx).readPointer().readCString()
+                            + ", signature: " + methods.add(idx + p_size).readPointer().readCString()
+                            + ", fnPtr: " + fnPtr
+                            + ", modulename: " + modulename + " -> base: " + modulebase;
+                        if (null != modulebase) {
+                            logstr += ", offset: " + fnPtr.sub(modulebase);
+                        }
+                        DMLog.i('hook_registNatives', logstr);
                     }
-                    DMLog.i('hook_registNatives', logstr);
+                    else {
+                        DMLog.e('hook_registNatives', 'module is null');
+                    }
                 }
 
             }

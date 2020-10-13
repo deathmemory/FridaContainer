@@ -35,7 +35,7 @@ FCAnd.Jni.hookJNI('NewStringUTF', {
                 var lr =  FCAnd.AndOpts.getLR(this.context);
                 DMLog.i('NewStringUTF', '(' + Process.arch + ')lr: ' + lr
                     + ', foundso:' + FCAnd.AndOpts.getModuleByAddr(lr) );
-                // AndOpts.getStacksModInfo(this.context, 100);
+                // FCCommon.getStacksModInfo(this.context, 100);
             }
         }
     }

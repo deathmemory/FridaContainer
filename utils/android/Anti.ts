@@ -7,6 +7,7 @@
  */
 import {FCAnd} from "../FCAnd";
 import {DMLog} from "../dmlog";
+import {FCCommon} from "../FCCommon";
 
 const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
 const ssl_pinning_pass = require("../../utils/android/repinning");
@@ -36,7 +37,7 @@ export class Anti {
             if (null == this) {
                 return 0;
             }
-            var lr = FCAnd.andOpts.getLR(this.context);
+            var lr = FCCommon.getLR(this.context);
             DMLog.i('exit debug', 'entry, lr: ' + lr);
             return 0;
         }, 'int', ['int', 'int']));
@@ -51,7 +52,7 @@ export class Anti {
             if (null == this) {
                 return 0;
             }
-            var lr = FCAnd.andOpts.getLR(this.context);
+            var lr = FCCommon.getLR(this.context);
             DMLog.i('kill debug', 'entry, lr: ' + lr);
             return 0;
         }, 'int', ['int', 'int']));
@@ -74,7 +75,7 @@ export class Anti {
             if (null == this) {
                 return 0;
             }
-            const lr = FCAnd.andOpts.getLR(this.context);
+            const lr = FCCommon.getLR(this.context);
             var bufstr = (buffer as NativePointer).readCString();
             var buf_str;
 
