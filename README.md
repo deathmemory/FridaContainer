@@ -2,13 +2,20 @@
 
 FridaContainer 集成了网上流行的和自己编写的常用的 frida 脚本，为逆向工作提效之用。
 
+npm build 后，用 Pycharm 打开编辑，可以看到 frida api 代码补全提示。
+
 
 ## 编译和使用
+
+需要根据自己的需求修改 main.py 或者 index.ts，编写实际操作内容。
+使用 index.ts 入口方式可以按照以下方式编译和调用。
 
 ```sh
 $ git clone https://github.com/deathmemory/FridaContainer.git
 $ cd FridaContainer/
 $ npm install
+## after edit index.ts
+$ npm run build
 $ frida -U -f com.example.android --no-pause -l _fcagent.js
 ```
 

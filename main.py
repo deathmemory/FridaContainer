@@ -67,11 +67,11 @@ if __name__ == '__main__':
     # doHook("com.sdu.didi.psnger", "frida_didi.js", False)
     # doHook(u'滴滴出行', "OneTravel.js", False);
     # spawn(device, 'com.autonavi.cprotectortest')
-    # doHook('com.autonavi.cprotectortest', '_agent.js', True)
-    # doHook('com.autonavi.minimap', '_agent.js', True)
-    # doHook('com.ss.android.ugc.aweme', '_agent.js', True)
-    doHook('com.google.android.apps.maps', '_agent.js', True)
-    # doHook('com.baidu.BaiduMap', '_agent.js', True)
+    # doHook('com.autonavi.cprotectortest', '_fcagent.js', True)
+    # doHook('com.autonavi.minimap', '_fcagent.js', True)
+    # doHook('com.ss.android.ugc.aweme', '_fcagent.js', True)
+    doHook('com.google.android.apps.maps', '_fcagent.js', True)
+    # doHook('com.baidu.BaiduMap', '_fcagent.js', True)
 
     # script.post({
     #     'type': "input",
