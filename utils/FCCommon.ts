@@ -66,4 +66,41 @@ export class FCCommon {
         }
         return ptr(0);
     }
+
+    static trace_open() {
+        const open_ptr = Module.findExportByName(null, "open");
+        if (open_ptr) {
+            Interceptor.attach(open_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('trace_open', 'filepath: ' + args[0].readCString());
+                }
+            });
+        }
+    }
+
+    static trace_memoryAccess(moduleName: string, offset: number) {
+        const tag = 'trace_memoryAccess';
+        const moduleBase = Module.findBaseAddress(moduleName);
+        var absAddr: NativePointer;
+        if (null != moduleBase) {
+            absAddr = moduleBase.add(offset);
+        }
+        else {
+            absAddr = new NativePointer(offset);
+        }
+        Memory.protect(absAddr, Process.pointerSize, '---');
+        DMLog.i(tag, 'final mem access addr: ' + absAddr);
+
+        Process.setExceptionHandler(function (details) {
+            var memory = details["memory"];
+            if (memory) {
+                var except_address = memory["address"];
+                DMLog.i(tag, "except_address: " + except_address);
+                if (except_address == absAddr) {
+                    DMLog.i(tag, 'except address matched');
+                    DMLog.i(tag, JSON.stringify(details));
+                }
+            }
+        });
+    }
 }

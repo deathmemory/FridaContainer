@@ -6,6 +6,7 @@
  * @desc:
  */
 import {DMLog} from "./utils/dmlog";
+import {FCCommon} from "./utils/FCCommon";
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer, please add code on the index.ts');
@@ -21,6 +22,7 @@ function main() {
     // FCAnd.AndOpts.showStacks();
     // FCAnd.AndOpts.dump_dex_common();
     // FCAnd.Anti.anti_sslPinning("/data/local/tmp/cert-der.crt");
+    FCCommon.trace_memoryAccess('Hopper Disassembler v4', 0x483959);
 }
 
 Java.perform(function () {
