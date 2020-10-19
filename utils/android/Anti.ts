@@ -10,7 +10,7 @@ import {DMLog} from "../dmlog";
 import {FCCommon} from "../FCCommon";
 
 const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
-const ssl_pinning_pass = require("../../utils/android/repinning");
+const ssl_pinning_pass = require("./repinning");
 
 export class Anti {
 

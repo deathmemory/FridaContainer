@@ -1,17 +1,35 @@
 {
-  "name": "fridaContainer",
-  "version": "1.0.0",
+  "name": "@dmemory/fridacontainer",
+  "version": "1.0.6",
   "description": "fridaContainer written in TypeScript and JavaScript",
-  "private": true,
+  "private": false,
   "main": "index.ts",
+  "dev": true,
   "scripts": {
-    "prepare": "npm run build",
+    "prepare": ["npm run build", "tsc"],
     "build": "frida-compile index.ts -o _fcagent.js",
     "watch": "frida-compile index.ts -o _fcagent.js -w"
   },
-  "devDependencies": {
+  "bundleDependencies": false,
+  "dependencies": {
     "@types/frida-gum": "^15.3.0",
     "@types/node": "^13.13.25",
     "frida-compile": "^9.5.2"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deathmemory/FridaContainer.git"
+  },
+  "author": "deathmemory",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deathmemory/FridaContainer/issues"
+  },
+  "homepage": "https://github.com/deathmemory/FridaContainer#readme",
+  "files": ["dist/**/*"]
 }
