@@ -4,17 +4,21 @@
   "description": "fridaContainer written in TypeScript and JavaScript",
   "private": false,
   "main": "index.ts",
-  "dev": true,
   "scripts": {
     "prepare": ["npm run build", "tsc"],
     "build": "frida-compile index.ts -o _fcagent.js",
     "watch": "frida-compile index.ts -o _fcagent.js -w"
   },
   "bundleDependencies": false,
+  "devDependencies": {
+    "@types/frida-gum": "^16.1.0",
+    "@types/node": "^14.0.14",
+    "frida-compile": "^9.3.0"
+  },
   "dependencies": {
-    "@types/frida-gum": "^15.3.0",
-    "@types/node": "^13.13.25",
-    "frida-compile": "^9.5.2"
+    "@types/frida-gum": "^16.1.0",
+    "@types/node": "^14.0.14",
+    "frida-compile": "^9.3.0"
   },
   "directories": {
     "doc": "docs",
