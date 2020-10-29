@@ -6,6 +6,7 @@
  * @desc:
  */
 import {DMLog} from "./utils/dmlog";
+import {FCCommon} from "./utils/FCCommon";
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer, please add code on the index.ts');
@@ -23,6 +24,17 @@ function main() {
     // FCAnd.Anti.anti_sslPinning("/data/local/tmp/cert-der.crt");
 }
 
-Java.perform(function () {
-    main();
-});
+if (Java.available) {
+    DMLog.i("JAVA", "available");
+    Java.perform(function () {
+        main();
+    });
+}
+
+if (ObjC.available) {
+    DMLog.i("ObjC", "available");
+    FCCommon.printModules();
+    FCCommon.dump_module("Hopper Disassembler v4", "/Users/dmemory/Downloads/");
+}
+
+

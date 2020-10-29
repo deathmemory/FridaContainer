@@ -29,7 +29,7 @@ export class FCCommon {
 
         for (var i = 0; i < number; i++) {
             var curSp = sp.add(Process.pointerSize * i);
-            DMLog.i('And showStacksModInfo', 'curSp: ' + curSp + ', val: ' + curSp.readPointer()
+            DMLog.i('showStacksModInfo', 'curSp: ' + curSp + ', val: ' + curSp.readPointer()
                 + ', module: ' + FCCommon.getModuleByAddr(curSp.readPointer()));
         }
     }
@@ -65,5 +65,31 @@ export class FCCommon {
             return (context as Arm64CpuContext).lr;
         }
         return ptr(0);
+    }
+
+    static dump_module(moduleName: string, saveDir: string) {
+        const tag = 'dump_module';
+        const module = Process.getModuleByName(moduleName);
+        const base = module.base;
+        const size = module.size;
+        const savePath: string = saveDir + "/" + moduleName + "_" + base + "_" + size + ".fcdump";
+        DMLog.i(tag, "base: " + base + ", size: " + size);
+        DMLog.i(tag, "save path: " + savePath);
+        const f = new File(savePath, "wb");
+        if (f) {
+            Memory.protect(base, size, "rwx");
+            var readed = base.readByteArray(size);
+            if (readed) {
+                f.write(readed);
+                f.flush();
+            }
+            f.close();
+        }
+    }
+
+    static printModules() {
+        Process.enumerateModules().forEach(function (module) {
+            DMLog.i('enumerateModules', JSON.stringify(module));
+        });
     }
 }

@@ -79,6 +79,7 @@ export class IosOpts {
 
     static trace_NSLog() {
         const NSLog_ptr = Module.findExportByName("Foundation", "NSLog");
+        DMLog.i('NSLog_ptr', 'addr: ' + NSLog_ptr);
         if (NSLog_ptr) {
             Interceptor.attach(NSLog_ptr, {
                 onEnter: function (args) {
@@ -88,6 +89,7 @@ export class IosOpts {
         }
 
         const NSLogv_ptr = Module.findExportByName("Foundation", "NSLogv");
+        DMLog.i('NSLogv_ptr', 'addr: ' + NSLogv_ptr);
         if (NSLogv_ptr) {
             Interceptor.attach(NSLogv_ptr, {
                 onEnter: function (args) {
