@@ -67,6 +67,11 @@ export class FCCommon {
         return ptr(0);
     }
 
+    /**
+     * dump 指定模块并存储到指定目录
+     * @param {string} moduleName
+     * @param {string} saveDir
+     */
     static dump_module(moduleName: string, saveDir: string) {
         const tag = 'dump_module';
         const module = Process.getModuleByName(moduleName);

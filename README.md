@@ -59,13 +59,12 @@ $ npm run watch
 
 ### 2.3 FCCommon 跨平台通用方法
 
-
 | 方法 | 说明 |
 | ----- | ---------------------------- |
 | showStacksModInfo| 打印指定层数的 sp，并输出 module 信息 (如果有）|
 | getModuleByAddr | 根据地址获取模块信息 |
 | getLR | 获取 LR 寄存器值 |
-
+| dump_module | dump 指定模块并存储到指定目录 |
 
 ## 3. 感谢
 [todo 引用参考]
