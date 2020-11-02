@@ -10,7 +10,7 @@ import {DMLog} from "../dmlog";
 import {FCCommon} from "../FCCommon";
 
 const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
-const ssl_pinning_pass = require("./repinning");
+const sslPinningPass = require("./repinning");
 
 export class Anti {
 
@@ -157,6 +157,6 @@ export class Anti {
     }
 
     static anti_sslPinning(cerPath: string) {
-        ssl_pinning_pass(cerPath);
+        sslPinningPass.ssl_pinning_pass(cerPath);
     }
 }
