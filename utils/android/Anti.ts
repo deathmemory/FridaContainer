@@ -75,6 +75,7 @@ export class Anti {
             if (null == this) {
                 return 0;
             }
+            var retval = fgets(buffer, size, fp);
             const lr = FCCommon.getLR(this.context);
             var bufstr = (buffer as NativePointer).readCString();
             var buf_str;
@@ -114,8 +115,6 @@ export class Anti {
                     DMLog.i('anti_fgets', "SigBlk_res:" + buffer.readCString());
                 }
             }
-
-            var retval = fgets(buffer, size, fp);
             return retval;
         }, 'pointer', ['pointer', 'int', 'pointer']));
     }
