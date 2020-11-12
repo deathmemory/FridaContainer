@@ -16,16 +16,7 @@ export class FCCommon {
      * @param {number} number
      */
     static showStacksModInfo(context: CpuContext, number: number) {
-        var sp: NativePointer;
-        if (Process.arch == 'arm') {
-            sp = (context as ArmCpuContext).sp;
-        }
-        else if (Process.arch == 'arm64') {
-            sp = (context as Arm64CpuContext).sp;
-        }
-        else {
-            return;
-        }
+        var sp: NativePointer = context.sp;
 
         for (var i = 0; i < number; i++) {
             var curSp = sp.add(Process.pointerSize * i);
@@ -64,13 +55,17 @@ export class FCCommon {
         else if (Process.arch == 'arm64') {
             return (context as Arm64CpuContext).lr;
         }
+        else {
+            DMLog.e('getLR', 'not support current arch: ' + Process.arch);
+        }
         return ptr(0);
     }
 
     /**
      * dump 指定模块并存储到指定目录
      * @param {string} moduleName
-     * @param {string} saveDir
+     * @param {string} saveDir      如果 Android 环境下应该保存在 /data/data/com.package.name/ 目录下，
+     *                              否则可能会遇到权限问题，导致保存失败。
      */
     static dump_module(moduleName: string, saveDir: string) {
         const tag = 'dump_module';
@@ -80,15 +75,40 @@ export class FCCommon {
         const savePath: string = saveDir + "/" + moduleName + "_" + base + "_" + size + ".fcdump";
         DMLog.i(tag, "base: " + base + ", size: " + size);
         DMLog.i(tag, "save path: " + savePath);
-        const f = new File(savePath, "wb");
-        if (f) {
-            Memory.protect(base, size, "rwx");
-            var readed = base.readByteArray(size);
-            if (readed) {
-                f.write(readed);
-                f.flush();
+        let readed = base.readByteArray(size);
+        try {
+            const f = new File(savePath, "wb");
+            if (f) {
+                Memory.protect(base, size, "rwx");
+                if (readed) {
+                    f.write(readed);
+                    f.flush();
+                }
+                f.close();
             }
-            f.close();
+        } catch (e) {
+            const fopen_ptr = Module.getExportByName(null, 'fopen');
+            const fwrite_ptr = Module.getExportByName(null, 'fwrite');
+            const fclose_ptr = Module.getExportByName(null, 'fclose');
+            if (fopen_ptr && fwrite_ptr && fclose_ptr) {
+                const fopen_func = new NativeFunction(fopen_ptr, 'pointer', ['pointer', 'pointer']);
+                const fwrite_func = new NativeFunction(fwrite_ptr, 'int', ['pointer', 'int', 'int', 'pointer']);
+                const fclose_func = new NativeFunction(fclose_ptr, 'int', ['pointer']);
+
+                let savePath_ptr = Memory.alloc(savePath.length + 1);
+                savePath_ptr.writeUtf8String(savePath);
+                const f = fopen_func(savePath_ptr, Memory.alloc(3).writeUtf8String("wb"));
+                DMLog.i(tag, 'fopen: ' + f);
+                if (f != 0 && readed) {
+                    const readed_ptr = Memory.alloc(readed.byteLength);
+                    readed_ptr.writeByteArray(readed);
+                    fwrite_func(readed_ptr, readed.byteLength, 1, f);
+                    fclose_func(f);
+                }
+                else {
+                    DMLog.e(tag, 'failed: f->' + f + ', readed->' + readed);
+                }
+            }
         }
     }
 
