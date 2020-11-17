@@ -211,4 +211,21 @@ export class AndOpts {
         const String = Java.use('java.lang.String');
         return String.$new(res);
     }
+
+    static getApplicationContext() {
+        const ActivityThread = Java.use('android.app.ActivityThread');
+        const Context = Java.use('android.content.Context');
+        const ctx = Java.cast(ActivityThread.currentApplication().getApplicationContext(), Context);
+        return ctx;
+    }
+
+    static printByteArray(jbytes: any) {
+        // return JSON.stringify(jbytes);
+        var result = "";
+        for(var i = 0; i < jbytes.length; ++i){
+            result += " ";
+            result += jbytes[i].toString(16);
+        }
+        return result;
+    }
 }
