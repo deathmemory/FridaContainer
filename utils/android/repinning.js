@@ -9,7 +9,7 @@
 
 
 
-function ssl_pinning_pass (cerPath){
+function ssl_load_cert (cerPath){
     Java.perform(function (){
     	console.log("");
         console.log("[.] Cert Pinning Bypass/Re-Pinning");
@@ -68,4 +68,4 @@ function ssl_pinning_pass (cerPath){
     });
 }
 
-exports.ssl_pinning_pass = ssl_pinning_pass;
+exports.ssl_load_cert = ssl_load_cert;

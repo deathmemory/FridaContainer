@@ -11,6 +11,7 @@ import {FCCommon} from "../FCCommon";
 
 const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
 const sslPinningPass = require("./repinning");
+const unpinning = require("./multi_unpinning");
 
 export class Anti {
 
@@ -65,8 +66,9 @@ export class Anti {
      * ptrace_stop, (package) t, SigBlk
      */
     static anti_fgets() {
+        const tag = 'anti_fgets';
         const fgetsPtr = Module.findExportByName(null, 'fgets');
-        DMLog.i(Anti.tag, 'anti_fgets: ' + fgetsPtr);
+        DMLog.i(Anti.tag, 'fgets addr: ' + fgetsPtr);
         if (null == fgetsPtr) {
             return;
         }
@@ -75,44 +77,43 @@ export class Anti {
             if (null == this) {
                 return 0;
             }
-            var retval = fgets(buffer, size, fp);
+            var logTag = null;
+            // 进入时先记录现场
             const lr = FCCommon.getLR(this.context);
+            // 读取原 buffer
+            var retval = fgets(buffer, size, fp);
             var bufstr = (buffer as NativePointer).readCString();
-            var buf_str;
 
             if (null != bufstr) {
                 if (bufstr.indexOf("TracerPid:") > -1) {
                     buffer.writeUtf8String("TracerPid:\t0");
-                    // dmLogout("tracerpid replaced: " + Memory.readUtf8String(buffer));
-                    DMLog.i('anti_fgets', "TracePid_res:" + buffer.readCString() + ' lr: ' + lr);
+                    logTag = 'TracerPid';
                 }
                 //State:	S (sleeping)
-                if(bufstr.indexOf("State:\tt (tracing stop)") > -1){
+                else if (bufstr.indexOf("State:\tt (tracing stop)") > -1) {
                     buffer.writeUtf8String("State:\tS (sleeping)");
-                    DMLog.i('anti_fgets', "State_res:" + buffer.readCString());
+                    logTag = 'State';
                 }
-
-                if(bufstr.indexOf("ptrace_stop") > -1){
+                // ptrace_stop
+                else if (bufstr.indexOf("ptrace_stop") > -1) {
                     buffer.writeUtf8String("sys_epoll_wait");
-                    DMLog.i('anti_fgets', "wchan_res:" + buffer.readCString());
+                    logTag = 'ptrace_stop';
                 }
 
-                var state_name = "";
                 //(sankuai.meituan) t
-                if (null != state_name) {
-                    var name_t = state_name + ") t";
-                    var name_s = state_name + ") S";
-                    if(bufstr.indexOf(name_t) > -1){
-                        buf_str = bufstr;
-                        buffer.writeUtf8String(buf_str.replace(name_t, name_s));
-                        DMLog.i('anti_fgets', "stat_res:" + buffer.readCString());
-                    }
+                else if (bufstr.indexOf(") t") > -1) {
+                    buffer.writeUtf8String(bufstr.replace(") t", ") S"));
+                    logTag = 'stat_t';
                 }
 
                 // SigBlk
-                if (bufstr.indexOf('SigBlk:') > -1) {
+                else if (bufstr.indexOf('SigBlk:') > -1) {
                     buffer.writeUtf8String('SigBlk:\t0000000000001000');
-                    DMLog.i('anti_fgets', "SigBlk_res:" + buffer.readCString());
+                    logTag = 'SigBlk';
+                }
+                if (logTag) {
+                    DMLog.i(tag + " " + logTag, bufstr + " -> " + buffer.readCString() + ' lr: ' + lr
+                        + "(" + FCCommon.getModuleByAddr(lr) + ")");
                 }
             }
             return retval;
@@ -129,10 +130,10 @@ export class Anti {
             //         DMLog.i('anti_ptrace', 'entry');
             //     }
             // });
-            Interceptor.replace(ptrace.or(1), new NativeCallback(function (p1:any, p2: any, p3: any, p4: any) {
+            Interceptor.replace(ptrace.or(1), new NativeCallback(function (p1: any, p2: any, p3: any, p4: any) {
                 DMLog.i('anti_ptrace', 'entry');
                 return 1;
-            },'long', ['int', "int", 'pointer', 'pointer']));
+            }, 'long', ['int', "int", 'pointer', 'pointer']));
         }
     }
 
@@ -151,11 +152,15 @@ export class Anti {
             Interceptor.replace(fork_addr, new NativeCallback(function () {
                 DMLog.i('fork_addr', 'entry');
                 return -1;
-            },'int', []));
+            }, 'int', []));
         }
     }
 
-    static anti_sslPinning(cerPath: string) {
-        sslPinningPass.ssl_pinning_pass(cerPath);
+    static anti_sslLoadCert(cerPath: string) {
+        sslPinningPass.ssl_load_cert(cerPath);
+    }
+
+    static anti_ssl_unpinning() {
+        setTimeout(unpinning.multi_unpinning, 0);
     }
 }

@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/frida-agent-example.iml" filepath="$PROJECT_DIR$/.idea/frida-agent-example.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/fridaContainer.iml" filepath="$PROJECT_DIR$/.idea/fridaContainer.iml" />
     </modules>
   </component>

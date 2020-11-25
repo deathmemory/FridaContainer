@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteMappingsManager">
+    <list>
+      <list>
+        <remote-mappings server-id="python@docker://deathmemory/dmunicorn:1.5/python" />
+      </list>
+    </list>
+  </component>
+</project>

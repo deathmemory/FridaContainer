@@ -3,30 +3,38 @@
 ## 一键去常规反调试
 
 ```typescript
-FCAnd.Anti.anti_debug();
+FCAnd.anti.anti_debug();
 ```
 
 ## 打印堆栈
 ```typescript
-FCAnd.AndOpts.showStacks();
+FCAnd.andOpts.showStacks();
 ```
 
 ## 通用的 Dump dex 方法
 ```typescript
-FCAnd.AndOpts.dump_dex_common();
+FCAnd.andOpts.dump_dex_common();
 ```
-## 过 ssl pinning
+## load 自定义 ssl 证书
 
 将证书 `cert-der.crt` 传到手机，然后调用下面的语句
 
 ```typescript
-FCAnd.Anti.anti_sslPinning("/data/local/tmp/cert-der.crt");
+FCAnd.anti.anti_sslLoadCert("/data/local/tmp/cert-der.crt");
+```
+
+## ssl unpinning
+
+相当于 frida 版的 JustTrustMe 
+
+```typescript
+FCAnd.anti.anti_ssl_unpinning();
 ```
 
 ## Hook JNI
 方便的 JNI Hook
 ```typescript
-FCAnd.Jni.hookJNI('NewStringUTF', {
+FCAnd.jni.hookJNI('NewStringUTF', {
     onEnter: function (args) {
         var str = args[1].readCString();
         DMLog.i('NewStringUTF', 'str: ' + str);
