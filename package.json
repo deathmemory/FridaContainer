@@ -1,6 +1,6 @@
 {
   "name": "@dmemory/fridacontainer",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "fridaContainer written in TypeScript and JavaScript",
   "private": false,
   "main": "index.ts",
