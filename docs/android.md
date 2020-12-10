@@ -6,6 +6,21 @@
 FCAnd.anti.anti_debug();
 ```
 
+## trace java methods
+
+```typescript
+/**
+ * java 方法追踪
+ * @param clazzes 要追踪类数组 ['M:Base64', 'E:java.lang.String'] ，类前面的 M 代表 match 模糊匹配，E 代表 equal 精确匹配
+ * @param whitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
+ *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
+ */
+FCAnd.andOpts.traceArtMethods(
+    ['M:MainActivity', 'E:java.lang.String'],
+    {'java.lang.String': {white: true, methods:['substring', 'getChars']} }
+);
+```
+
 ## 打印堆栈
 ```typescript
 FCAnd.andOpts.showStacks();

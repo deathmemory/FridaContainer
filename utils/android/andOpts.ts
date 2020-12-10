@@ -1,5 +1,6 @@
 ///<reference path="unpack/fridaUnpack.js"/>
 import {DMLog} from "../dmlog";
+import {FCAnd} from "../FCAnd";
 
 /**
  * @author: xingjun.xyf
@@ -45,7 +46,7 @@ export class AndOpts {
     static hook_JSONObject_getString(pKey: string) {
         const JSONObject = Java.use('org.json.JSONObject');
         JSONObject.getString.implementation = function (key: string) {
-            if(key == pKey) {
+            if (key == pKey) {
                 DMLog.i('hook_JSONObject_getString', 'found key: ' + key);
                 AndOpts.showStacks();
             }
@@ -57,28 +58,28 @@ export class AndOpts {
         // coord: (106734,0,22) | addr: Lcom/alibaba/fastjson/JSONObject; | loc: ?
         const fastJson = Java.use('com/alibaba/fastjson/JSONObject');
         fastJson.getString.implementation = function (key: string) {
-            if(key == pKey) {
+            if (key == pKey) {
                 DMLog.i('hook_fastJson getString', 'found key: ' + key);
                 AndOpts.showStacks();
             }
             return this.getString(key);
         };
         fastJson.getJSONArray.implementation = function (key: string) {
-            if(key == pKey) {
+            if (key == pKey) {
                 DMLog.i('hook_fastJson getJSONArray', 'found key: ' + key);
                 AndOpts.showStacks();
             }
             return this.getString(key);
         };
         fastJson.getJSONObject.implementation = function (key: string) {
-            if(key == pKey) {
+            if (key == pKey) {
                 DMLog.i('hook_fastJson getJSONObject', 'found key: ' + key);
                 AndOpts.showStacks();
             }
             return this.getString(key);
         };
         fastJson.getInteger.implementation = function (key: string) {
-            if(key == pKey) {
+            if (key == pKey) {
                 DMLog.i('hook_fastJson getJSONObject', 'found key: ' + key);
                 AndOpts.showStacks();
             }
@@ -91,10 +92,10 @@ export class AndOpts {
         Map.put.implementation = function (key: string, val: string) {
             var bRes = false;
             if (accurately) {
-                bRes = (key+"") == (pKey);
+                bRes = (key + "") == (pKey);
             }
             else {
-                bRes = (key+"").indexOf(pKey) > -1;
+                bRes = (key + "").indexOf(pKey) > -1;
             }
             if (bRes) {
                 DMLog.i('map', 'key: ' + key);
@@ -108,10 +109,10 @@ export class AndOpts {
         LinkedHashMap.put.implementation = function (key1: any, val: any) {
             var bRes = false;
             if (accurately) {
-                bRes = (key1+"") == (pKey);
+                bRes = (key1 + "") == (pKey);
             }
             else {
-                bRes = (key1+"").indexOf(pKey) > -1;
+                bRes = (key1 + "").indexOf(pKey) > -1;
             }
             if (null != key1 && bRes) {
                 DMLog.i('LinkedHashMap', 'key: ' + key1);
@@ -208,6 +209,9 @@ export class AndOpts {
      * @returns {any}
      */
     static newString(res: any) {
+        if (null == res) {
+            return null;
+        }
         const String = Java.use('java.lang.String');
         return String.$new(res);
     }
@@ -222,10 +226,121 @@ export class AndOpts {
     static printByteArray(jbytes: any) {
         // return JSON.stringify(jbytes);
         var result = "";
-        for(var i = 0; i < jbytes.length; ++i){
+        for (var i = 0; i < jbytes.length; ++i) {
             result += " ";
             result += jbytes[i].toString(16);
         }
         return result;
+    }
+
+    /**
+     * java 方法追踪
+     * @param clazzes 要追踪类数组 ['M:Base64', 'E:java.lang.String'] ，类前面的 M 代表 match 模糊匹配，E 代表 equal 精确匹配
+     * @param whitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
+     *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
+     */
+    static traceArtMethods(clazzes?: null | string[], whitelist?: null | any) {
+        const default_cls = [
+            'M:Base64',
+            'E:javax.crypto.Cipher',
+            'M:KeyGenerator',
+            'E:java.lang.String',
+        ];
+
+        const white_detail: any = {
+            /*{ clsname: {white: true/false, methods[a, b, c]} }*/
+            'java.lang.String': {white: true, methods: ['toString', 'getBytes']}
+        }
+
+        let dest_cls: string[] = [];
+        let dest_white: any = {...white_detail, ...whitelist};
+        if (clazzes != null) {
+            dest_cls = default_cls.concat(clazzes);
+        }
+        else {
+            dest_cls = default_cls;
+        }
+
+
+        function match(destCls: string, curClsName: string) {
+            let mode = destCls[0];
+            let ex = destCls.substr(2);
+            if (mode == 'E') {
+                return ex == curClsName;
+            }
+            else {
+                return curClsName.match(ex);
+            }
+        }
+
+        function traceArtMethodsCore(clsname: string) {
+            let cls = Java.use(clsname);
+            let methods = cls.class.getDeclaredMethods();
+            DMLog.i('traceArtMethodsCore', 'trace cls: ' + clsname + ', method size: ' + methods.length);
+            methods.forEach(function (method: any) {
+                let methodName = method.getName();
+                DMLog.i('traceArtMethodsCore.methodname', methodName);
+                let detail = dest_white[clsname];
+                if (undefined != detail && typeof (detail) == 'object') {
+                    if ((detail.methods.indexOf(methodName) > -1) != detail.white) {
+                        return true; // next forEach
+                    }
+                }
+
+                if ('invoke' == methodName || 'getChars' == methodName) {
+                    return true;    // 跳过并继续执行下一个 forEach
+                }
+                let methodOverloads = cls[methodName].overloads;
+                if (null != methodOverloads) {
+                    methodOverloads.forEach(function (overload: any) {
+                        try {
+                            overload.implementation = function () {
+                                let tid = Process.getCurrentThreadId();
+                                let tname = Java.use("java.lang.Thread").currentThread().getName();
+                                DMLog.i('traceMethod_entry', JSON.stringify({
+                                    tid: tid,
+                                    tname: tname,
+                                    classname: clsname,
+                                    method: overload._p[0],
+                                    args: arguments
+                                }));
+                                const retval = this[methodName].apply(this, arguments);
+                                DMLog.i('traceMethod_exit', JSON.stringify({
+                                    tid: tid,
+                                    tname: tname,
+                                    classname: clsname,
+                                    method: method.toString(),
+                                    retval: retval
+                                }));
+                                return retval;
+                            }
+                        } catch (e) {
+                            DMLog.d('overload.implementation exception: ' + overload._p[0], e.toString());
+                        }
+                    });
+                }
+            })
+
+            // let consOverloads = cls.$init.overloads;
+            // if (null != consOverloads) {
+            //     consOverloads.forEach(function (overload: any) {
+            //         overload.implementation = function () {
+            //             DMLog.i('traceInit_entry',  '================');
+            //             let retval = this.$init(arguments);
+            //             DMLog.i('traceInit_exit', '-----------------');
+            //             return retval;
+            //         }
+            //     });
+            // }
+        }
+
+        Java.enumerateLoadedClassesSync().forEach((curClsName, index, array) => {
+            dest_cls.forEach((destCls) => {
+                if (match(destCls, curClsName)) {
+                    traceArtMethodsCore(curClsName);
+                    return false; // end forEach
+                }
+            });
+        });
     }
 }

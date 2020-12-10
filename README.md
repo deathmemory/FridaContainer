@@ -1,6 +1,6 @@
 # FridaContainer
 
-FridaContainer 集成了网上流行的和自己编写的常用的 frida 脚本，为逆向工作提效之用。
+FridaContainer 整合了网上流行的和自己编写的常用的 frida 脚本，为逆向工作提效之用。
 
 npm build 后，用 Pycharm 打开编辑，可以看到 frida api 代码补全提示。
 
@@ -47,6 +47,7 @@ $ npm run watch
 3. 通用的 Dump dex 方法
 4. 过 ssl pinning
 5. Hook JNI
+6. Trace java methods
 
 ......
 
@@ -71,3 +72,9 @@ $ npm run watch
 
 由于引用较多，且时间比较久了，也很难都列出来，以后慢慢列举吧。
 感谢无私的代码分享者们。
+
+- https://codeshare.frida.re/@pcipolloni/universal-android-ssl-pinning-bypass-with-frida/
+- https://codeshare.frida.re/@akabe1/frida-multiple-unpinning/
+- https://github.com/Areizen/JNI-Frida-Hook
+- [art methods tracer](https://github.com/hluwa/ZenTracer)
+

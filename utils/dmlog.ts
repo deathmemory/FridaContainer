@@ -1,6 +1,10 @@
 export class DMLog {
+    private static bDebug: boolean = true;
+
     static d(tag: String, str: String) {
-        DMLog.log_('DEBUG', tag, str);
+        if (this.bDebug) {
+            DMLog.log_('DEBUG', tag, str);
+        }
     }
 
     static i(tag: String, str: String) {
