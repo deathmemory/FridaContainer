@@ -1,4 +1,5 @@
- __handlers__/
+python/android/tdc_dir
+__handlers__/
 agent/
 test/
 /_agent.js

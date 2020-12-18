@@ -14,10 +14,12 @@ FCAnd.anti.anti_debug();
  * @param clazzes 要追踪类数组 ['M:Base64', 'E:java.lang.String'] ，类前面的 M 代表 match 模糊匹配，E 代表 equal 精确匹配
  * @param whitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
  *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
+ * @stackFilter 按匹配字串打印堆栈。如果要匹配 bytes 数组需要十进制无空格字串，例如："104,113,-105"
  */
 FCAnd.andOpts.traceArtMethods(
     ['M:MainActivity', 'E:java.lang.String'],
-    {'java.lang.String': {white: true, methods:['substring', 'getChars']} }
+    {'java.lang.String': {white: true, methods:['substring', 'getChars']}},
+    "match_str_show_stacks"
 );
 ```
 

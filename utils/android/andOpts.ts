@@ -13,9 +13,14 @@ const fridaUnpack = require('./unpack/fridaUnpack');
 const jni = require('./jni_struct');
 
 export class AndOpts {
+
+    static getStacks() {
+        return Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new()) + "";
+    }
+
     static showStacks() {
         Java.perform(function () {
-            DMLog.d('showStacks', Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new()));  // 打印堆栈
+            DMLog.d('showStacks', AndOpts.getStacks());  // 打印堆栈
         });
     }
 
@@ -236,13 +241,17 @@ export class AndOpts {
     /**
      * java 方法追踪
      * @param clazzes 要追踪类数组 ['M:Base64', 'E:java.lang.String'] ，类前面的 M 代表 match 模糊匹配，E 代表 equal 精确匹配
-     * @param whitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
+     * @param clsWhitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
      *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
+     * @stackFilter 按匹配字串打印堆栈。如果要匹配 bytes 数组需要十进制无空格字串，例如："104,113,-105"
      */
-    static traceArtMethods(clazzes?: null | string[], whitelist?: null | any) {
+    static traceArtMethods(clazzes?: null | string[], clsWhitelist?: null | any, stackFilter?: string) {
         const default_cls = [
             'M:Base64',
             'E:javax.crypto.Cipher',
+            'E:javax.crypto.spec.SecretKeySpec',
+            'E:javax.crypto.spec.IvParameterSpec',
+            'E:javax.crypto.Mac',
             'M:KeyGenerator',
             'E:java.lang.String',
         ];
@@ -253,7 +262,7 @@ export class AndOpts {
         }
 
         let dest_cls: string[] = [];
-        let dest_white: any = {...white_detail, ...whitelist};
+        let dest_white: any = {...white_detail, ...clsWhitelist};
         if (clazzes != null) {
             dest_cls = default_cls.concat(clazzes);
         }
@@ -271,6 +280,17 @@ export class AndOpts {
             else {
                 return curClsName.match(ex);
             }
+        }
+
+        function sendContent(obj: any) {
+            let str = JSON.stringify(obj);
+            let stacks = null;
+            if (null != stackFilter && str.indexOf(stackFilter) > -1) {
+                stacks = FCAnd.andOpts.getStacks();
+                obj['stacks'] = stacks;
+                str = JSON.stringify(obj);
+            }
+            send(str);
         }
 
         function traceArtMethodsCore(clsname: string) {
@@ -297,21 +317,24 @@ export class AndOpts {
                             overload.implementation = function () {
                                 let tid = Process.getCurrentThreadId();
                                 let tname = Java.use("java.lang.Thread").currentThread().getName();
-                                DMLog.i('traceMethod_entry', JSON.stringify({
+                                sendContent({
                                     tid: tid,
+                                    status: 'entry',
                                     tname: tname,
                                     classname: clsname,
-                                    method: overload._p[0],
+                                    method: method.toString(),
+                                    method_: overload._p[0],
                                     args: arguments
-                                }));
+                                });
                                 const retval = this[methodName].apply(this, arguments);
-                                DMLog.i('traceMethod_exit', JSON.stringify({
+                                sendContent({
                                     tid: tid,
+                                    status: 'exit',
                                     tname: tname,
                                     classname: clsname,
                                     method: method.toString(),
                                     retval: retval
-                                }));
+                                });
                                 return retval;
                             }
                         } catch (e) {
