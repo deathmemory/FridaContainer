@@ -10,7 +10,6 @@ import {FCAnd} from "../FCAnd";
  * @desc:
  */
 const fridaUnpack = require('./unpack/fridaUnpack');
-const jni = require('./jni_struct');
 
 export class AndOpts {
 

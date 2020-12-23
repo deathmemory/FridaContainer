@@ -62,8 +62,10 @@ export class Anti {
     /**
      * @state_name: cat /proc/xxx/stat ==> ...(<state_name>) S...
      *
-     * anti fgets function include : status->TracerPid, State->(tracing stop)
-     * ptrace_stop, (package) t, SigBlk
+     * anti fgets function include :
+     * status->TracerPid, SigBlk, S (sleeping)
+     * State->(package) S
+     * wchan->SyS_epoll_wait
      */
     static anti_fgets() {
         const tag = 'anti_fgets';
@@ -108,7 +110,7 @@ export class Anti {
 
                 // SigBlk
                 else if (bufstr.indexOf('SigBlk:') > -1) {
-                    buffer.writeUtf8String('SigBlk:\t0000000000001000');
+                    buffer.writeUtf8String('SigBlk:\t0000000000001204');
                     logTag = 'SigBlk';
                 }
                 if (logTag) {
