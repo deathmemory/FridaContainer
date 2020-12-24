@@ -19,8 +19,9 @@ import frida
 
 class TraceLogCleaner:
 
-    def __init__(self):
+    def __init__(self, bFmt):
         self.saveDir = 'tdc_dir'
+        self.bFmt = bFmt
         pass
 
     def washFile(self, path):
@@ -40,38 +41,51 @@ class TraceLogCleaner:
     def washLine(self, line):
         if line == '':
             return
+        line = line.strip()
         # print ('current line: {}'.format(line))
         jobj = json.loads(line)
         filename = str(jobj['tid'])
         # wash args
         status = jobj['status']
-        if status == 'entry':
-            args = jobj['args']
+        result = "";
+        if status == 'jnitrace':
+            result = line
+            if self.bFmt is True:
+                fmtstr = self.getJniFormatString(jobj)
+                result += '\n' + fmtstr + '\n'
         else:
-            args = []
-            if ('retval' in jobj):
-                args.append(jobj['retval'])
-        if isinstance(args, list):
-            tryval = {}
-            for i in range(len(args)):
-                try:
-                    arg = args[i]
-                    if isinstance(arg, list):
-                        try:
-                            trystr = "".join(map(chr, arg))
-                        except:
-                            trystr = ''
-                        try:
-                            tryhex = ','.join('{:02x}'.format(x & 0xff) for x in arg)
-                        except:
-                            tryhex = ''
-                        tryval['p{:d}'.format(i)] = {'trystr': trystr, 'tryhex': tryhex}
-                except:
-                    pass
-            jobj['tryval'] = tryval
+            if status == 'entry':
+                args = jobj['args']
+            else:
+                args = []
+                if ('retval' in jobj):
+                    args.append(jobj['retval'])
+            if isinstance(args, list):
+                tryval = {}
+                for i in range(len(args)):
+                    try:
+                        arg = args[i]
+                        if isinstance(arg, list):
+                            try:
+                                trystr = "".join(map(chr, arg))
+                            except:
+                                trystr = ''
+                            try:
+                                tryhex = ','.join('{:02x}'.format(x & 0xff) for x in arg)
+                            except:
+                                tryhex = ''
+                            tryval['p{:d}'.format(i)] = {'trystr': trystr, 'tryhex': tryhex}
+                    except:
+                        pass
+                jobj['tryval'] = tryval
+
+            result = json.dumps(jobj)
+            if self.bFmt is True:
+                fmtstr = self.getJavaMethodFormatString(jobj)
+                result += '\n' + fmtstr + '\n'
 
         with open(os.path.join(self.saveDir, filename), 'a+') as f:
-            f.write(json.dumps(jobj))
+            f.write(result)
             f.write('\n')
             f.close()
 
@@ -100,12 +114,43 @@ class TraceLogCleaner:
     def onMessage(self, msg, data):
         self.washLine(msg['payload'])
 
+    def getJavaMethodFormatString(self, jobj):
+        return ''   # todo
+
+    def getJniFormatString(self, jobj):
+        try:
+            data = jobj['data']
+            jnival = data['jnival']
+            backtrace = data['backtrace']
+
+            argsfmt = []
+            for arg in jnival['args']:
+                tmp = '|- {argType}\t\t: {argValue}'.format(argType=arg['argType'].ljust(10, ' '), argValue=arg['argVal'].strip())
+                argsfmt.append(tmp)
+
+            backtraceFmt = []
+            try:
+                for bt in backtrace:
+                    tmp = '|-> {address}: ({module_name}:{module_base}) {path}'\
+                        .format(address=bt['address'],  module_name=bt['module']['name'], module_base=bt['module']['base'], path=bt['module']['path'])
+                    backtraceFmt.append(tmp)
+            except:
+                pass
+            fmt = '[+] {methodname}\n{args}\n|= {retType}\t\t: {retValue}\n|-> BackTrace: \n{backtraceFmt}'\
+                .format(methodname=data['methodname'], args='\n'.join(argsfmt),
+                        retType=jnival['ret']['retType'].ljust(10, ' '), retValue=jnival['ret']['retVal'].strip(),
+                        backtraceFmt='\n'.join(backtraceFmt))
+        except:
+            print('except:' + json.dumps(jobj))
+            return ""
+        return fmt
+
 
 if __name__ == '__main__':
-    tdc = TraceLogCleaner()
+    tdc = TraceLogCleaner(bFmt=True)
     tdc.clean()
-
-    # tdc.washFile(path='/Users/dmemory/Downloads/trace.log')
-
     tdc.washOnMessage('../../_fcagent.js')
+
+    # tdc.washFile(path='tdc_dir/test_31523')
+
     print ('done !')

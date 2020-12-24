@@ -7,7 +7,9 @@
  */
 import {FCCommon} from "../FCCommon"
 import {DMLog} from "../dmlog";
-
+import {MethodData} from "./jni/method_data";
+// @ts-ignore
+import JNI_ENV_METHODS from "./jni/jni_env.json";
 // struct JNINativeInterface :
 // https://android.googlesource.com/platform/libnativehelper/+/master/include_jni/jni.h#129
 const jni_struct_array = [
@@ -258,7 +260,7 @@ export class Jni {
         var env = Java.vm.getEnv();
         var env_ptr = env.handle.readPointer();
         const addr = Jni.getJNIFunctionAdress(env_ptr, name);
-        DMLog.d('Jni.getJNIAddr', 'addr: ' + addr);
+        // DMLog.d('Jni.getJNIAddr', 'addr: ' + addr);
         return addr;
     }
 
@@ -320,14 +322,17 @@ export class Jni {
     }
 
     static traceAllJNISimply() {
-        jni_struct_array.forEach(function (func_name) {
+        jni_struct_array.forEach(function (func_name, idx) {
             if (!func_name.includes("reserved")) {
                 Jni.hookJNI(func_name, {
-                    onEnter: function (args) {
-                        this.args = args;
+                    onEnter(args) {
+                        let md = new MethodData(this.context, func_name, JNI_ENV_METHODS[idx], args);
+                        this.md = md;
                     },
-                    onLeave: function (retval) {
-                        DMLog.i('traceAllJNISimply', "[+] Entered : " + func_name);
+                    onLeave(retval) {
+                        this.md.setRetval(retval);
+                        // DMLog.i('traceAllJNISimply', "[+] Entered : " + this.md.toString());
+                        send(JSON.stringify({tid: this.threadId, status: "jnitrace", data: this.md}));
                     }
                 });
             }
