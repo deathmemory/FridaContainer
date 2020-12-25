@@ -47,7 +47,8 @@ $ npm run watch
 3. 通用的 Dump dex 方法
 4. 过 ssl pinning
 5. Hook JNI
-6. Trace java methods
+6. Java methods trace
+7. JNI trace
 
 ......
 
@@ -73,8 +74,8 @@ $ npm run watch
 由于引用较多，且时间比较久了，也很难都列出来，以后慢慢列举吧。
 感谢无私的代码分享者们。
 
-- https://codeshare.frida.re/@pcipolloni/universal-android-ssl-pinning-bypass-with-frida/
-- https://codeshare.frida.re/@akabe1/frida-multiple-unpinning/
-- https://github.com/Areizen/JNI-Frida-Hook
+- [universal-android-ssl-pinning-bypass-with-frida](https://codeshare.frida.re/@pcipolloni/universal-android-ssl-pinning-bypass-with-frida/)
+- [rida-multiple-unpinning](https://codeshare.frida.re/@akabe1/frida-multiple-unpinning/)
 - [art methods tracer](https://github.com/hluwa/ZenTracer)
-
+- [JNI-Frida-Hook](https://github.com/Areizen/JNI-Frida-Hook)
+- [jnitrace](https://github.com/chame1eon/jnitrace)

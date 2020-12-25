@@ -321,6 +321,10 @@ export class Jni {
         });
     }
 
+    /**
+     * trace 所有 Jni 方法
+     * 可以配合 `python/android/traceLogCleaner.py` 脚本，格式化输出日志
+     */
     static traceAllJNISimply() {
         jni_struct_array.forEach(function (func_name, idx) {
             if (!func_name.includes("reserved")) {
@@ -337,9 +341,5 @@ export class Jni {
                 });
             }
         })
-    }
-
-    static traceJNI() {
-
     }
 }
