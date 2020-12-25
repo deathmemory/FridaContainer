@@ -23,14 +23,22 @@ FCAnd.andOpts.traceArtMethods(
 );
 ```
 
+格式化 trace 效果
+
+![javamethodtracepic](./pics/javamethodtracepic.jpg)
+
 ## trace jni
 
 本功能是 [jnitrace](https://github.com/chame1eon/jnitrace) 的一个简化和嵌入版。
+
 在 `index.ts` 中启用下面函数
+
 ```typescript
 FCAnd.jni.traceAllJNISimply();
 ```
+
 能过 `python/android/traceLogCleaner.py` 脚本收集 trace 日志，可以按线程格式化输出日志
+
 输出样例：
 
 ![jnitracepic](./pics/jnitracelog.jpg)

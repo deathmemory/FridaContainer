@@ -19,6 +19,9 @@ import frida
 
 class TraceLogCleaner:
 
+    '''
+    @bFmt 是否以格式化方式记录日志
+    '''
     def __init__(self, bFmt):
         self.saveDir = 'tdc_dir'
         self.bFmt = bFmt
@@ -47,15 +50,16 @@ class TraceLogCleaner:
         filename = str(jobj['tid'])
         # wash args
         status = jobj['status']
-        result = "";
-        if status == 'jnitrace':
+        if status == 'msg':
+            result = line
+        elif status == 'jnitrace':
             result = line
             if self.bFmt is True:
                 fmtstr = self.getJniFormatString(jobj)
                 result += '\n' + fmtstr + '\n'
         else:
             if status == 'entry':
-                args = jobj['args']
+                args = list(jobj['args'].values())
             else:
                 args = []
                 if ('retval' in jobj):
@@ -115,7 +119,39 @@ class TraceLogCleaner:
         self.washLine(msg['payload'])
 
     def getJavaMethodFormatString(self, jobj):
-        return ''   # todo
+        tryval = jobj['tryval']
+        status = jobj['status']
+        if status == 'exit':
+            try:
+                if 'retval' in jobj:
+                    tryblock = ''
+                    if 'p0' in tryval:
+                        tryblock = '\n|(str)== \"{trystr}\"\n|(hex)== {tryhex}'\
+                            .format(trystr=tryval['p0']['trystr'], tryhex=tryval['p0']['tryhex'])
+                    vals = '|= {retval}{tryblock}'.format(retval=str(jobj['retval']), tryblock=tryblock)
+                else:
+                    vals = ''
+            except:
+                print('except exit:', json.dumps(jobj))
+        else:
+            args = list(jobj['args'].values())
+            vals = []
+            try:
+                for i in range(len(args)):
+                    arg = args[i]
+                    tryblock = ''
+                    if isinstance(arg, list):
+                        pkey = 'p%d' % i
+                        if pkey in tryval:
+                            tryblock = '\n|(str)-- \"{trystr}\"\n|(hex)-- {tryhex}'\
+                                .format(trystr=tryval[pkey]['trystr'], tryhex=tryval[pkey]['tryhex'])
+                    tmp = '|- {arg}{tryblock}'.format(arg=str(arg), tryblock=tryblock)
+                    vals.append(tmp)
+            except:
+                print('except entry:', json.dumps(jobj))
+            vals = '\n'.join(vals)
+        fmt = '[+] ({status}) {clsname}\n|- {methodname}\n{vals}'.format(status=status, clsname=jobj['classname'], methodname=jobj['method'], vals=vals)
+        return fmt
 
     def getJniFormatString(self, jobj):
         try:

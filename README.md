@@ -33,6 +33,13 @@ $ npm run watch
 
 [详细引入方式请看这里](docs/use_as_npm_node.md)
 
+### 1.3 赘述几句我当前的使用习惯
+
+1. 使用 `pycharm` 做开发（其他 IDE 也一样）
+2. clone 仓库后，在项目根目录创建 agent 目录（已加入 gitignore）在这里开发业务脚本
+3. 修改 `index.ts` 引入 agent 目录下的类
+4. 单开一个 shell 跑 `npm run watch` 实时编译脚本
+5. 不断修改 index 或 agent 的脚本，注入、测试，达到目的。
 
 ## 2. 功能简介
 
