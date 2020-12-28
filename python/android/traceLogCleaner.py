@@ -7,6 +7,7 @@
 @desc: trace日志清洁工。默认 attach Android 当前打开的应用，接收 trace 内容并按 threadid 分文件记录
         如果检测数据为字符数组，则会尝试转换成 string 到 trystr 字段，也会尝试转换成 hex
         到 tryhex 字段，方便搜索。
+        保存结果在脚本同目录下的 tdc_dir 目录中。
 '''
 import codecs
 import json

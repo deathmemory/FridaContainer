@@ -8,6 +8,8 @@ FCAnd.anti.anti_debug();
 
 ## trace java methods
 
+在 `index.ts` 中启用下面函数
+
 ```typescript
 /**
  * java 方法追踪
@@ -23,6 +25,8 @@ FCAnd.andOpts.traceArtMethods(
 );
 ```
 
+通过 `python/android/traceLogCleaner.py` 脚本收集 trace 日志，可以按线程、格式化输出日志
+
 格式化 trace 效果
 
 ![javamethodtracepic](./pics/javamethodtracepic.jpg)
@@ -37,7 +41,7 @@ FCAnd.andOpts.traceArtMethods(
 FCAnd.jni.traceAllJNISimply();
 ```
 
-能过 `python/android/traceLogCleaner.py` 脚本收集 trace 日志，可以按线程格式化输出日志
+通过 `python/android/traceLogCleaner.py` 脚本收集 trace 日志，可以按线程、格式化输出日志
 
 输出样例：
 
