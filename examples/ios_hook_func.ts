@@ -10,7 +10,7 @@ import {FCiOS} from "../utils/FCiOS";
 import {DMLog} from "../utils/dmlog";
 
 if (ObjC.available) {
-    const addr = FCiOS.iosOpts.getFuncAddr('*[NVEnvironment deviceId]');
+    const addr = FCiOS.getFuncAddr('*[NVEnvironment deviceId]');
     Interceptor.attach(addr, {
         onEnter: function (args) {
 

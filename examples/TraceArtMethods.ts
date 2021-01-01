@@ -11,9 +11,9 @@ import {FCAnd} from "../utils/FCAnd";
 if (Java.available) {
     Java.perform(() => {
         // [1] trace by default value
-        FCAnd.andOpts.traceArtMethods();
+        FCAnd.traceArtMethods();
         // [2] trace custom methods
-        FCAnd.andOpts.traceArtMethods(
+        FCAnd.traceArtMethods(
             ['M:MainActivity', 'E:java.lang.String'],
             {'java.lang.String': {white: true, methods:['substring', 'getChars']} },
             "match_str_show_stacks"

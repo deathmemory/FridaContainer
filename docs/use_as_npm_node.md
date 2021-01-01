@@ -50,6 +50,6 @@ sudo npm install
 import {FCAnd} from "fridacontainer/FCAnd"
 
 function main() {
-    FCAnd.andOpts.hook_url(true);
+    FCAnd.hook_url(true);
 }
 ```

@@ -5,7 +5,6 @@
  * @time: 2020/4/16 5:03 PM
  * @desc:
  */
-import {FCAnd} from "../FCAnd";
 import {DMLog} from "../dmlog";
 import {FCCommon} from "../FCCommon";
 
@@ -13,23 +12,21 @@ const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
 const sslPinningPass = require("./repinning");
 const unpinning = require("./multi_unpinning");
 
-export class Anti {
+export namespace Anti {
 
-    static tag = 'Anti';
-
-    static anti_InMemoryDexClassLoader(callbackfunc: any) {
+    export function anti_InMemoryDexClassLoader(callbackfunc: any) {
         anti_InMemoryDexClassLoader(callbackfunc);
     }
 
-    static anti_debug() {
-        this.anti_fgets();
-        this.anti_exit();
-        this.anti_fork();
-        this.anti_kill();
-        this.anti_ptrace();
+    export function anti_debug() {
+        anti_fgets();
+        anti_exit();
+        anti_fork();
+        anti_kill();
+        anti_ptrace();
     }
 
-    static anti_exit() {
+    export function anti_exit() {
         const exit_ptr = Module.findExportByName(null, 'exit');
         if (null == exit_ptr) {
             return;
@@ -44,7 +41,7 @@ export class Anti {
         }, 'int', ['int', 'int']));
     }
 
-    static anti_kill() {
+    export function anti_kill() {
         const kill_ptr = Module.findExportByName(null, 'kill');
         if (null == kill_ptr) {
             return;
@@ -67,10 +64,10 @@ export class Anti {
      * State->(package) S
      * wchan->SyS_epoll_wait
      */
-    static anti_fgets() {
+    export function anti_fgets() {
         const tag = 'anti_fgets';
         const fgetsPtr = Module.findExportByName(null, 'fgets');
-        DMLog.i(Anti.tag, 'fgets addr: ' + fgetsPtr);
+        DMLog.i(tag, 'fgets addr: ' + fgetsPtr);
         if (null == fgetsPtr) {
             return;
         }
@@ -122,7 +119,7 @@ export class Anti {
         }, 'pointer', ['pointer', 'int', 'pointer']));
     }
 
-    static anti_ptrace() {
+    export function anti_ptrace() {
         var ptrace = Module.findExportByName(null, "ptrace");
         if (null != ptrace) {
             ptrace = ptrace.or(1);
@@ -142,7 +139,7 @@ export class Anti {
     /**
      * 适用于每日优鲜的反调试
      */
-    static anti_fork() {
+    export function anti_fork() {
         var fork_addr = Module.findExportByName(null, "fork");
         DMLog.i('anti_ptrace', "fork_addr : " + fork_addr);
         if (null != fork_addr) {
@@ -158,11 +155,11 @@ export class Anti {
         }
     }
 
-    static anti_sslLoadCert(cerPath: string) {
+    export function anti_sslLoadCert(cerPath: string) {
         sslPinningPass.ssl_load_cert(cerPath);
     }
 
-    static anti_ssl_unpinning() {
+    export function anti_ssl_unpinning() {
         setTimeout(unpinning.multi_unpinning, 0);
     }
 }

@@ -8,14 +8,14 @@ import {DMLog} from "./dmlog";
  * @desc: 跨平台可通用的方法
  */
 
-export class FCCommon {
+export namespace FCCommon {
 
     /**
      * 打印指定层数的 sp，并输出 module 信息 (如果有）
      * @param {CpuContext} context
      * @param {number} number
      */
-    static showStacksModInfo(context: CpuContext, number: number) {
+    export function showStacksModInfo(context: CpuContext, number: number) {
         var sp: NativePointer = context.sp;
 
         for (var i = 0; i < number; i++) {
@@ -31,7 +31,7 @@ export class FCCommon {
      * @param {NativePointer} addr
      * @returns {string}
      */
-    static getModuleByAddr(addr: NativePointer): Module | null {
+    export function getModuleByAddr(addr: NativePointer): Module | null {
         var result = null;
         Process.enumerateModules().forEach(function (module: Module) {
             if (module.base <= addr && addr <= (module.base.add(module.size))) {
@@ -48,7 +48,7 @@ export class FCCommon {
      * @param {CpuContext} context
      * @returns {NativePointer}
      */
-    static getLR(context: CpuContext) {
+    export function getLR(context: CpuContext) {
         if (Process.arch == 'arm') {
             return (context as ArmCpuContext).lr;
         }
@@ -67,7 +67,7 @@ export class FCCommon {
      * @param {string} saveDir      如果 Android 环境下应该保存在 /data/data/com.package.name/ 目录下，
      *                              否则可能会遇到权限问题，导致保存失败。
      */
-    static dump_module(moduleName: string, saveDir: string) {
+    export function dump_module(moduleName: string, saveDir: string) {
         const tag = 'dump_module';
         const module = Process.getModuleByName(moduleName);
         const base = module.base;
@@ -112,7 +112,7 @@ export class FCCommon {
         }
     }
 
-    static printModules() {
+    export function printModules() {
         Process.enumerateModules().forEach(function (module) {
             DMLog.i('enumerateModules', JSON.stringify(module));
         });

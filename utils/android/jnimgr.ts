@@ -248,15 +248,15 @@ const jni_struct_array = [
     "GetObjectRefType"
 ];
 
-export class Jni {
+export namespace Jni {
 
     /* Calculate the given funcName address from the JNIEnv pointer */
-    static getJNIFunctionAdress(jnienv_addr: NativePointer, func_name: string) {
+    export function getJNIFunctionAdress(jnienv_addr: NativePointer, func_name: string) {
         var offset = jni_struct_array.indexOf(func_name) * Process.pointerSize
         return jnienv_addr.add(offset).readPointer();
     }
 
-    static getJNIAddr(name: string) {
+    export function getJNIAddr(name: string) {
         var env = Java.vm.getEnv();
         var env_ptr = env.handle.readPointer();
         const addr = Jni.getJNIFunctionAdress(env_ptr, name);
@@ -264,13 +264,13 @@ export class Jni {
         return addr;
     }
 
-    static hookJNI(name: string, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback,
+    export function hookJNI(name: string, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback,
                    data?: NativePointerValue) {
         const addr = Jni.getJNIAddr(name);
         return Interceptor.attach(addr, callbacksOrProbe);
     }
 
-    static hook_registNatives() {
+    export function hook_registNatives() {
 
         var env = Java.vm.getEnv();
         var handlePointer = env.handle.readPointer();
@@ -325,7 +325,7 @@ export class Jni {
      * trace 所有 Jni 方法
      * 可以配合 `python/android/traceLogCleaner.py` 脚本，格式化输出日志
      */
-    static traceAllJNISimply() {
+    export function traceAllJNISimply() {
         jni_struct_array.forEach(function (func_name, idx) {
             if (!func_name.includes("reserved")) {
                 Jni.hookJNI(func_name, {

@@ -18,7 +18,7 @@ FCAnd.anti.anti_debug();
  *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
  * @stackFilter 按匹配字串打印堆栈。如果要匹配 bytes 数组需要十进制无空格字串，例如："104,113,-105"
  */
-FCAnd.andOpts.traceArtMethods(
+FCAnd.traceArtMethods(
     ['M:MainActivity', 'E:java.lang.String'],
     {'java.lang.String': {white: true, methods:['substring', 'getChars']}},
     "match_str_show_stacks"
@@ -49,12 +49,12 @@ FCAnd.jni.traceAllJNISimply();
 
 ## 打印堆栈
 ```typescript
-FCAnd.andOpts.showStacks();
+FCAnd.showStacks();
 ```
 
 ## 通用的 Dump dex 方法
 ```typescript
-FCAnd.andOpts.dump_dex_common();
+FCAnd.dump_dex_common();
 ```
 ## load 自定义 ssl 证书
 
@@ -81,9 +81,9 @@ FCAnd.jni.hookJNI('NewStringUTF', {
         DMLog.i('NewStringUTF', 'str: ' + str);
         if (null != str) {
             if (str == 'mesh' || str.startsWith('6962')) {
-                var lr =  FCAnd.AndOpts.getLR(this.context);
+                var lr =  FCAnd.getLR(this.context);
                 DMLog.i('NewStringUTF', '(' + Process.arch + ')lr: ' + lr
-                    + ', foundso:' + FCAnd.AndOpts.getModuleByAddr(lr) );
+                    + ', foundso:' + FCAnd.getModuleByAddr(lr) );
                 // FCCommon.getStacksModInfo(this.context, 100);
             }
         }
