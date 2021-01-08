@@ -100,6 +100,17 @@ FCAnd.jni.hook_registNatives();
 该功能拆分出了一个独立模块，使用频率高的朋友可以使用独立模块
 地址：https://github.com/deathmemory/fridaRegstNtv
 
+## 动态加载 dex 
+
+在利用 InMemoryDexClassLoader 加载内存 Dex 找不到类的情况下适用。
+
+```typescript
+FCAnd.anti.anti_InMemoryDexClassLoader(function(){
+    const cls = Java.use("find/same/multi/dex/class");
+    // ...
+});
+```
+
 ## 其它
 
 1. 根据地址获取所在 module 的信息

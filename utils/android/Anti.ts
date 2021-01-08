@@ -14,6 +14,16 @@ const unpinning = require("./multi_unpinning");
 
 export namespace Anti {
 
+    /**
+     * 动态加载 dex
+     * 在利用 InMemoryDexClassLoader 加载内存 Dex 找不到类的情况下适用。
+     * 调用方式：
+     * FCAnd.anti.anti_InMemoryDexClassLoader(function(){
+     *     const cls = Java.use('find/same/multi/dex/class');
+     *     // ...
+     * });
+     * @param callbackfunc
+     */
     export function anti_InMemoryDexClassLoader(callbackfunc: any) {
         anti_InMemoryDexClassLoader(callbackfunc);
     }

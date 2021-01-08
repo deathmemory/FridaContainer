@@ -252,7 +252,7 @@ export namespace Jni {
 
     /* Calculate the given funcName address from the JNIEnv pointer */
     export function getJNIFunctionAdress(jnienv_addr: NativePointer, func_name: string) {
-        var offset = jni_struct_array.indexOf(func_name) * Process.pointerSize
+        var offset = jni_struct_array.indexOf(func_name) * Process.pointerSize;
         return jnienv_addr.add(offset).readPointer();
     }
 
@@ -270,36 +270,33 @@ export namespace Jni {
         return Interceptor.attach(addr, callbacksOrProbe);
     }
 
+    /**
+     * 分离仓库地址：https://github.com/deathmemory/fridaRegstNtv
+     */
     export function hook_registNatives() {
-
-        var env = Java.vm.getEnv();
-        var handlePointer = env.handle.readPointer();
-        console.log("handle: " + handlePointer);
-        var nativePointer = handlePointer.add(215 * Process.pointerSize).readPointer();
-        console.log("register: " + nativePointer);
-        /**
-         typedef struct {
-            const char* name;
-            const char* signature;
-            void* fnPtr;
-         } JNINativeMethod;
-         jint RegisterNatives(JNIEnv* env, jclass clazz, const JNINativeMethod* methods, jint nMethods)
-         */
-        Interceptor.attach(nativePointer, {
+        const tag = 'fridaRegstNtv';
+        Jni.hookJNI("RegisterNatives", {
             onEnter: function (args) {
                 var env = Java.vm.getEnv();
                 var p_size = Process.pointerSize;
                 var methods = args[2];
                 var methodcount = args[3].toInt32();
+                // 获取类名
                 var name = env.getClassName(args[1]);
-                console.log("==== class: " + name + " ====");
-
-                console.log("==== methods: " + methods + " nMethods: " + methodcount + " ====");
+                DMLog.i(tag, "==== class: " + name + " ====");
+                DMLog.i(tag, "==== methods: " + methods + " nMethods: " + methodcount + " ====");
+                /** 根据函数结构原型遍历动态注册信息
+                 typedef struct {
+                    const char* name;
+                    const char* signature;
+                    void* fnPtr;
+                 } JNINativeMethod;
+                 jint RegisterNatives(JNIEnv* env, jclass clazz, const JNINativeMethod* methods, jint nMethods)
+                 */
                 for (var i = 0; i < methodcount; i++) {
-
                     var idx = i * p_size * 3;
                     var fnPtr = methods.add(idx + p_size * 2).readPointer();
-                    const module = FCCommon.getModuleByAddr(fnPtr);
+                    const module = Process.getModuleByAddress(fnPtr);
                     if (module) {
                         const modulename = module.name;
                         const modulebase = module.base;
@@ -310,13 +307,12 @@ export namespace Jni {
                         if (null != modulebase) {
                             logstr += ", offset: " + fnPtr.sub(modulebase);
                         }
-                        DMLog.i('hook_registNatives', logstr);
+                        DMLog.i(tag, logstr);
                     }
                     else {
-                        DMLog.e('hook_registNatives', 'module is null');
+                        DMLog.e(tag, 'module is null');
                     }
                 }
-
             }
         });
     }
@@ -326,16 +322,19 @@ export namespace Jni {
      * 可以配合 `python/android/traceLogCleaner.py` 脚本，格式化输出日志
      */
     export function traceAllJNISimply() {
+        // 遍历 Hook Jni 函数
         jni_struct_array.forEach(function (func_name, idx) {
             if (!func_name.includes("reserved")) {
                 Jni.hookJNI(func_name, {
                     onEnter(args) {
+                        // 触发时将信息保存到对象中
                         let md = new MethodData(this.context, func_name, JNI_ENV_METHODS[idx], args);
                         this.md = md;
                     },
                     onLeave(retval) {
+                        // 退出时将返回值追加到对象中
                         this.md.setRetval(retval);
-                        // DMLog.i('traceAllJNISimply', "[+] Entered : " + this.md.toString());
+                        // 发送日志
                         send(JSON.stringify({tid: this.threadId, status: "jnitrace", data: this.md}));
                     }
                 });
