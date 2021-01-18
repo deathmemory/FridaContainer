@@ -17,8 +17,9 @@ FCAnd.anti.anti_debug();
  * @param whitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
  *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
  * @stackFilter 按匹配字串打印堆栈。如果要匹配 bytes 数组需要十进制无空格字串，例如："104,113,-105"
+ * traceArtMethods 改为 traceJavaMethods 的别称存在
  */
-FCAnd.traceArtMethods(
+FCAnd.traceJavaMethods(
     ['M:MainActivity', 'E:java.lang.String'],
     {'java.lang.String': {white: true, methods:['substring', 'getChars']}},
     "match_str_show_stacks"

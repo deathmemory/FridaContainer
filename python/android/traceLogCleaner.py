@@ -151,7 +151,7 @@ class TraceLogCleaner:
             except:
                 print('except entry:', json.dumps(jobj))
             vals = '\n'.join(vals)
-        fmt = '[+] ({status}) {clsname}\n|- {methodname}\n{vals}'.format(status=status, clsname=jobj['classname'], methodname=jobj['method'], vals=vals)
+        fmt = '[+] ({status}) {clsname}\n|-> {methodname}\n{vals}'.format(status=status, clsname=jobj['classname'], methodname=jobj['method'], vals=vals)
         return fmt
 
     def getJniFormatString(self, jobj):

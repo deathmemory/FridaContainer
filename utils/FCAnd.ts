@@ -243,37 +243,59 @@ export namespace FCAnd {
     }
 
     /**
+     * trace java methods 默认类
+     */
+    export const tjm_default_cls = [
+        // 'E:javax.crypto.Cipher',
+        // 'E:javax.crypto.spec.SecretKeySpec',
+        // 'E:javax.crypto.spec.IvParameterSpec',
+        // 'E:javax.crypto.Mac',
+        // 'M:KeyGenerator',
+        'M:Base64',
+        'M:javax.crypto',
+        'M:java.security',
+        'E:java.lang.String',
+    ];
+
+    /**
+     * trace java methods 对 java.lang.String 类中的默认白名单方法名
+     */
+    export const tjm_default_white_detail: any = {
+        /*{ clsname: {white: true/false, methods[a, b, c]} }*/
+        'java.lang.String': {white: true, methods: ['toString', 'getBytes']}
+    }
+
+    /**
+     * 作为 traceJavaMethods 的别称存在
+     * @param clazzes
+     * @param clsWhitelist
+     * @param stackFilter
+     */
+    export function traceArtMethods(clazzes?: null | string[], clsWhitelist?: null | any, stackFilter?: string) {
+        traceJavaMethods(clazzes, clsWhitelist, stackFilter);
+    }
+
+    /**
      * java 方法追踪
      * @param clazzes 要追踪类数组 ['M:Base64', 'E:java.lang.String'] ，类前面的 M 代表 match 模糊匹配，E 代表 equal 精确匹配
      * @param clsWhitelist 指定某类方法 Hook 细则，可按白名单或黑名单过滤方法。
      *                  { '类名': {white: true, methods: ['toString', 'getBytes']} }
      * @stackFilter 按匹配字串打印堆栈。如果要匹配 bytes 数组需要十进制无空格字串，例如："104,113,-105"
      */
-    export function traceArtMethods(clazzes?: null | string[], clsWhitelist?: null | any, stackFilter?: string) {
-        const default_cls = [
-            'M:Base64',
-            'E:javax.crypto.Cipher',
-            'E:javax.crypto.spec.SecretKeySpec',
-            'E:javax.crypto.spec.IvParameterSpec',
-            'E:javax.crypto.Mac',
-            'M:KeyGenerator',
-            'E:java.lang.String',
-        ];
-
-        const white_detail: any = {
-            /*{ clsname: {white: true/false, methods[a, b, c]} }*/
-            'java.lang.String': {white: true, methods: ['toString', 'getBytes']}
-        }
-
+    export function traceJavaMethods(clazzes?: null | string[], clsWhitelist?: null | any, stackFilter?: string) {
         let dest_cls: string[] = [];
-        let dest_white: any = {...white_detail, ...clsWhitelist};
+        let dest_white: any = {...tjm_default_white_detail, ...clsWhitelist};
         if (clazzes != null) {
-            dest_cls = default_cls.concat(clazzes);
+            dest_cls = tjm_default_cls.concat(clazzes);
         }
         else {
-            dest_cls = default_cls;
+            dest_cls = tjm_default_cls;
         }
 
+        traceJavaMethods_custom(dest_cls, dest_white, stackFilter);
+    }
+
+    export function traceJavaMethods_custom(clazzes: string[], clsWhitelist?: null | any, stackFilter?: string) {
 
         function match(destCls: string, curClsName: string) {
             let mode = destCls[0];
@@ -297,15 +319,18 @@ export namespace FCAnd {
             send(str);
         }
 
-        function traceArtMethodsCore(clsname: string) {
+        function traceJavaMethodsCore(clsname: string) {
             let cls = Java.use(clsname);
             let methods = cls.class.getDeclaredMethods();
-            DMLog.i('traceArtMethodsCore', 'trace cls: ' + clsname + ', method size: ' + methods.length);
+            DMLog.i('traceJavaMethodsCore', 'trace cls: ' + clsname + ', method size: ' + methods.length);
             methods.forEach(function (method: any) {
                 let methodName = method.getName();
-                DMLog.i('traceArtMethodsCore.methodname', methodName);
-                let detail = dest_white[clsname];
-                if (undefined != detail && typeof (detail) == 'object') {
+                DMLog.i('traceJavaMethodsCore.methodname', methodName);
+                let detail = null;
+                if (null != clsWhitelist) {
+                    detail = clsWhitelist[clsname];
+                }
+                if (null != detail && typeof (detail) == 'object') {
                     if ((detail.methods.indexOf(methodName) > -1) != detail.white) {
                         return true; // next forEach
                     }
@@ -362,9 +387,9 @@ export namespace FCAnd {
         }
 
         Java.enumerateLoadedClassesSync().forEach((curClsName, index, array) => {
-            dest_cls.forEach((destCls) => {
+            clazzes.forEach((destCls) => {
                 if (match(destCls, curClsName)) {
-                    traceArtMethodsCore(curClsName);
+                    traceJavaMethodsCore(curClsName);
                     return false; // end forEach
                 }
             });
