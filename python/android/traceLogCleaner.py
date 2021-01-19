@@ -117,7 +117,10 @@ class TraceLogCleaner:
         pass
 
     def onMessage(self, msg, data):
-        self.washLine(msg['payload'])
+        try:
+            self.washLine(msg['payload'])
+        except:
+            print('except line: ' + str(msg))
 
     def getJavaMethodFormatString(self, jobj):
         tryval = jobj['tryval']

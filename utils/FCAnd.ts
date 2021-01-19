@@ -25,7 +25,7 @@ export namespace FCAnd {
     export function showStacks() {
         Java.perform(function () {
             DMLog.d('showStacks', getStacks());  // 打印堆栈
-        });Process.getCurrentThreadId()
+        });
     }
 
     export function hook_uri(bShowStacks: boolean) {
@@ -383,32 +383,36 @@ export namespace FCAnd {
             // getConstructors
             let constructors = cls.class.getConstructors();
             if (null != constructors && (null == detail || detail.methods.indexOf('$init') > -1)) {
-                let methodOverloads = cls['$init'].overloads;
-                methodOverloads.forEach(function (overload: any) {
-                    overload.implementation = function () {
-                        let tid = Process.getCurrentThreadId();
-                        let tname = Java.use("java.lang.Thread").currentThread().getName();
-                        sendContent({
-                            tid: tid,
-                            status: 'entry',
-                            tname: tname,
-                            classname: clsname,
-                            method: overload.holder.toString(),
-                            method_: overload._p[0],
-                            args: arguments
-                        });
-                        const retval = this['$init'].apply(this, arguments);
-                        sendContent({
-                            tid: tid,
-                            status: 'exit',
-                            tname: tname,
-                            classname: clsname,
-                            method: overload.holder.toString(),
-                            retval: retval
-                        });
-                        return retval;
-                    }
-                });
+                try {
+                    let methodOverloads = cls['$init'].overloads;
+                    methodOverloads.forEach(function (overload: any) {
+                        overload.implementation = function () {
+                            let tid = Process.getCurrentThreadId();
+                            let tname = Java.use("java.lang.Thread").currentThread().getName();
+                            sendContent({
+                                tid: tid,
+                                status: 'entry',
+                                tname: tname,
+                                classname: clsname,
+                                method: overload.holder.toString(),
+                                method_: overload._p[0],
+                                args: arguments
+                            });
+                            const retval = this['$init'].apply(this, arguments);
+                            sendContent({
+                                tid: tid,
+                                status: 'exit',
+                                tname: tname,
+                                classname: clsname,
+                                method: overload.holder.toString(),
+                                retval: retval
+                            });
+                            return retval;
+                        }
+                    });
+                }
+                catch (e) {
+                }
             }
         }
 
