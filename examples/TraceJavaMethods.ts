@@ -20,7 +20,7 @@ if (Java.available) {
         // [3] trace custom methods
         FCAnd.traceJavaMethods(
             ['M:MainActivity', 'E:java.lang.String'],
-            {'java.lang.String': {white: true, methods:['substring', 'getChars']} },
+            {'java.lang.String': {white: true, methods: ['substring', 'getChars']}},
             "match_str_show_stacks"
         );
         // [4] trace custom methods without defaults, you need to do it yourself
@@ -29,5 +29,9 @@ if (Java.available) {
             FCAnd.tjm_default_white_detail,
             "match_str_show_stacks"
         );
+        // [5] trace java constructors
+        FCAnd.traceJavaMethods_custom(['E:java.net.URI'],
+            {'java.net.URI': {white: true, methods: ['$init']}},
+            "match_str_show_stacks");
     });
 }

@@ -14,6 +14,7 @@ import {FCCommon} from "./FCCommon";
 import {DMLog} from "./dmlog";
 
 export namespace FCAnd {
+    import Method = Java.Method;
     export const anti = Anti;
     export const jni = Jni;
     export const common = FCCommon;
@@ -295,6 +296,13 @@ export namespace FCAnd {
         traceJavaMethods_custom(dest_cls, dest_white, stackFilter);
     }
 
+    /**
+     * 去除了默认类，放大了自由度
+     * 去除了默认 trace 类的干净方法，需要 trace 任何类，需要自己指定。
+     * @param clazzes
+     * @param clsWhitelist
+     * @param stackFilter
+     */
     export function traceJavaMethods_custom(clazzes: string[], clsWhitelist?: null | any, stackFilter?: string) {
 
         function match(destCls: string, curClsName: string) {
@@ -320,23 +328,23 @@ export namespace FCAnd {
         }
 
         function traceJavaMethodsCore(clsname: string) {
+            let detail: { methods: string | any[]; white: boolean; } | null = null;
+            if (null != clsWhitelist) {
+                detail = clsWhitelist[clsname];
+            }
             let cls = Java.use(clsname);
             let methods = cls.class.getDeclaredMethods();
             DMLog.i('traceJavaMethodsCore', 'trace cls: ' + clsname + ', method size: ' + methods.length);
             methods.forEach(function (method: any) {
                 let methodName = method.getName();
                 DMLog.i('traceJavaMethodsCore.methodname', methodName);
-                let detail = null;
-                if (null != clsWhitelist) {
-                    detail = clsWhitelist[clsname];
-                }
                 if (null != detail && typeof (detail) == 'object') {
                     if ((detail.methods.indexOf(methodName) > -1) != detail.white) {
                         return true; // next forEach
                     }
                 }
 
-                if ('invoke' == methodName || 'getChars' == methodName) {
+                if ('invoke' == methodName) {
                     return true;    // 跳过并继续执行下一个 forEach
                 }
                 let methodOverloads = cls[methodName].overloads;
@@ -373,17 +381,36 @@ export namespace FCAnd {
                 }
             })
 
-            // let consOverloads = cls.$init.overloads;
-            // if (null != consOverloads) {
-            //     consOverloads.forEach(function (overload: any) {
-            //         overload.implementation = function () {
-            //             DMLog.i('traceInit_entry',  '================');
-            //             let retval = this.$init(arguments);
-            //             DMLog.i('traceInit_exit', '-----------------');
-            //             return retval;
-            //         }
-            //     });
-            // }
+            // getConstructors
+            let constructors = cls.class.getConstructors();
+            if (null != constructors && (null == detail || detail.methods.indexOf('$init') > -1)) {
+                let methodOverloads = cls['$init'].overloads;
+                methodOverloads.forEach(function (overload: any) {
+                    overload.implementation = function () {
+                        let tid = Process.getCurrentThreadId();
+                        let tname = Java.use("java.lang.Thread").currentThread().getName();
+                        sendContent({
+                            tid: tid,
+                            status: 'entry',
+                            tname: tname,
+                            classname: clsname,
+                            method: overload.holder.toString(),
+                            method_: overload._p[0],
+                            args: arguments
+                        });
+                        const retval = this['$init'].apply(this, arguments);
+                        sendContent({
+                            tid: tid,
+                            status: 'exit',
+                            tname: tname,
+                            classname: clsname,
+                            method: overload.holder.toString(),
+                            retval: retval
+                        });
+                        return retval;
+                    }
+                });
+            }
         }
 
         Java.enumerateLoadedClassesSync().forEach((curClsName, index, array) => {
