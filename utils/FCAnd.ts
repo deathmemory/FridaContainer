@@ -14,7 +14,6 @@ import {FCCommon} from "./FCCommon";
 import {DMLog} from "./dmlog";
 
 export namespace FCAnd {
-    import Method = Java.Method;
     export const anti = Anti;
     export const jni = Jni;
     export const common = FCCommon;
