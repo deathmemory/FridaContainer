@@ -32,6 +32,14 @@ FCAnd.traceJavaMethods(
 
 ![javamethodtracepic](./pics/javamethodtracepic.jpg)
 
+* 注：如果 java trace 出现崩溃可以尝试调用纯净模式 `FCAnd.traceJavaMethods_custom`，这里没有默认 trace 的类 `FCAnd.tjm_default_cls`和默认单类白名单`FCAnd.tjm_default_white_detail`，需要自己手动附加，可以减少默认 trace 的类来判断崩溃的原因。若还有崩溃，请提交 issue 。
+```typescript
+FCAnd.traceJavaMethods_custom(['E:java.net.URI'],
+            {'java.net.URI': {white: true, methods: ['$init']}},
+            "match_str_show_stacks");
+```
+
+
 ## trace jni
 
 本功能是 [jnitrace](https://github.com/chame1eon/jnitrace) 的一个简化和嵌入版。

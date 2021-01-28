@@ -326,17 +326,25 @@ export namespace FCAnd {
             send(str);
         }
 
+        function getMethodDescription(clsname: string, overload: any) {
+            // @ts-ignore
+            let argumentTypes = overload.argumentTypes.map(val => val.className).toString();
+            let desc = `${overload.returnType.className} ${clsname}#${overload.methodName}(${argumentTypes})`;
+            return desc;
+        }
+
         function traceJavaMethodsCore(clsname: string) {
+            const tag = 'traceJavaMethodsCore';
             let detail: { methods: string | any[]; white: boolean; } | null = null;
             if (null != clsWhitelist) {
                 detail = clsWhitelist[clsname];
             }
             let cls = Java.use(clsname);
             let methods = cls.class.getDeclaredMethods();
-            DMLog.i('traceJavaMethodsCore', 'trace cls: ' + clsname + ', method size: ' + methods.length);
+            DMLog.i(tag, 'trace cls: ' + clsname + ', method size: ' + methods.length);
             methods.forEach(function (method: any) {
                 let methodName = method.getName();
-                DMLog.i('traceJavaMethodsCore.methodname', methodName);
+                // DMLog.i('traceJavaMethodsCore.methodname', methodName);
                 if (null != detail && typeof (detail) == 'object') {
                     if ((detail.methods.indexOf(methodName) > -1) != detail.white) {
                         return true; // next forEach
@@ -350,6 +358,8 @@ export namespace FCAnd {
                 if (null != methodOverloads) {
                     methodOverloads.forEach(function (overload: any) {
                         try {
+                            let methodDesc = getMethodDescription(clsname, overload);
+                            DMLog.i(tag, 'hookmethod: ' + methodDesc);
                             overload.implementation = function () {
                                 let tid = Process.getCurrentThreadId();
                                 let tname = Java.use("java.lang.Thread").currentThread().getName();
@@ -358,23 +368,24 @@ export namespace FCAnd {
                                     status: 'entry',
                                     tname: tname,
                                     classname: clsname,
-                                    method: method.toString(),
-                                    method_: overload._p[0],
+                                    method: methodDesc,
                                     args: arguments
                                 });
-                                const retval = this[methodName].apply(this, arguments);
+
+                                let retval = overload.apply(this, arguments);
+
                                 sendContent({
                                     tid: tid,
                                     status: 'exit',
                                     tname: tname,
                                     classname: clsname,
-                                    method: method.toString(),
+                                    method: methodDesc,
                                     retval: retval
                                 });
                                 return retval;
                             }
                         } catch (e) {
-                            DMLog.d('overload.implementation exception: ' + overload._p[0], e.toString());
+                            DMLog.d(tag, 'overload.implementation exception:\t' + overload.methodName + "\t" + e.toString());
                         }
                     });
                 }
