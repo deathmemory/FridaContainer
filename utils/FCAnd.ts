@@ -17,6 +17,7 @@ export namespace FCAnd {
     export const anti = Anti;
     export const jni = Jni;
     export const common = FCCommon;
+    var firstdiscovery = false;
 
     export function getStacks() {
         return Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new()) + "";
@@ -321,6 +322,10 @@ export namespace FCAnd {
             if (null != stackFilter && str.indexOf(stackFilter) > -1) {
                 stacks = getStacks();
                 obj['stacks'] = stacks;
+                if (false == firstdiscovery) {
+                    obj['firstdiscovery'] = true;
+                    firstdiscovery = true;
+                }
                 str = JSON.stringify(obj);
             }
             send(str);
