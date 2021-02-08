@@ -54,7 +54,7 @@ function multi_unpinning() {
 			var okhttp3_Activity_1 = Java.use('okhttp3.CertificatePinner');
 			okhttp3_Activity_1.check.overload('java.lang.String', 'java.util.List').implementation = function (a, b) {
 				console.log('[+] Bypassing OkHTTPv3 {1}: ' + a);
-				return true;
+				return;
 			};
 		} catch (err) {
 			console.log('[-] OkHTTPv3 {1} pinner not found');
@@ -66,7 +66,7 @@ function multi_unpinning() {
 			var okhttp3_Activity_2 = Java.use('okhttp3.CertificatePinner');
 			okhttp3_Activity_2.check.overload('java.lang.String', 'java.security.cert.Certificate').implementation = function (a, b) {
 				console.log('[+] Bypassing OkHTTPv3 {2}: ' + a);
-				return true;
+				return;
 			};
 		} catch (err) {
 			console.log('[-] OkHTTPv3 {2} pinner not found');
@@ -77,7 +77,7 @@ function multi_unpinning() {
 			var okhttp3_Activity_3 = Java.use('okhttp3.CertificatePinner');
 			okhttp3_Activity_3.check.overload('java.lang.String', '[Ljava.security.cert.Certificate;').implementation = function (a, b) {
 				console.log('[+] Bypassing OkHTTPv3 {3}: ' + a);
-				return true;
+				return;
 			};
 		} catch(err) {
 			console.log('[-] OkHTTPv3 {3} pinner not found');
