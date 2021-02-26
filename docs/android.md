@@ -2,6 +2,9 @@
 
 ## 增加 gson 库，可使用 gson.toJson 等功能
 
+将 Java 对象转化成 Json，仓库已经集成了 gson 库，即使 APP 没有内置 gson 也可以使用。
+当 gson 功能遇到瓶颈崩溃时，会用自实现的方法做兜底转换。
+
 ```typescript
 FCAnd.toJSONString(javaObject);
 ```
