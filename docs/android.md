@@ -1,5 +1,11 @@
 # Android 使用文档
 
+## 增加 gson 库，可使用 gson.toJson 等功能
+
+```typescript
+FCAnd.toJSONString(javaObject);
+```
+
 ## 一键去常规反调试
 
 ```typescript

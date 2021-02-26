@@ -5,6 +5,7 @@
  * @time: 2020/4/16 5:03 PM
  * @desc:
  */
+import {gjson_dex} from "./android/libs/gson";
 
 
 const fridaUnpack = require('./android/unpack/fridaUnpack');
@@ -426,8 +427,7 @@ export namespace FCAnd {
                             return retval;
                         }
                     });
-                }
-                catch (e) {
+                } catch (e) {
                 }
             }
         }
@@ -440,5 +440,78 @@ export namespace FCAnd {
                 }
             });
         });
+    }
+
+    export function toJSONString(obj: any) {
+        if (null == obj) {
+            return "obj is null";
+        }
+        let resstr = "";
+        let GsonBuilder = null;
+        try {
+            GsonBuilder = Java.use('com.google.gson.GsonBuilder');
+        } catch (e) {
+            FCAnd.registGson();
+            GsonBuilder = Java.use('com.google.gson.GsonBuilder');
+        }
+        if (null != GsonBuilder) {
+            try {
+                const gson = GsonBuilder.$new().serializeNulls()
+                    .serializeSpecialFloatingPointValues()
+                    .disableHtmlEscaping()
+                    .setLenient()
+                    .create();
+                resstr = gson.toJson(obj);
+            } catch (e) {
+                DMLog.e('gson.toJson', 'exceipt: ' + e.toString());
+                resstr = FCAnd.parseObject(obj);
+            }
+        }
+
+        return resstr;
+    }
+
+    export function parseObject(data: any) {
+        try {
+            const declaredFields = data.class.getDeclaredFields();
+            let res = {};
+            for (let i = 0; i < declaredFields.length; i++) {
+                const field = declaredFields[i];
+                field.setAccessible(true);
+                const type = field.getType();
+                let fdata = field.get(data);
+                if (null != fdata) {
+                    if (type.getName() != "[B") {
+                        fdata = fdata.toString();
+                    }
+                    else {
+                        fdata = Java.array('byte', fdata);
+                        fdata = JSON.stringify(fdata);
+                    }
+                }
+                // @ts-ignore
+                res[field.getName()] = fdata;
+            }
+            return JSON.stringify(res);
+        } catch (e) {
+            return "parseObject except: " + e.toString();
+        }
+
+    }
+
+
+    export function registGson() {
+        const dexbase64 = gjson_dex;
+        DMLog.i('registGson', 'entry: ' + dexbase64.length);
+
+        var application = Java.use("android.app.Application");
+        const bytes = new Buffer(dexbase64, 'base64');
+        const dexpath = application.$f.cacheDir + '/gson.jar';
+        const f = new File(dexpath, 'wb+');
+        f.write(bytes.buffer as ArrayBuffer);
+        f.flush()
+        f.close()
+
+        Java.openClassFile(dexpath).load();
     }
 }
