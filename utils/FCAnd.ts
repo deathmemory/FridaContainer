@@ -5,8 +5,6 @@
  * @time: 2020/4/16 5:03 PM
  * @desc:
  */
-import {gjson_dex} from "./android/libs/gson";
-
 
 const fridaUnpack = require('./android/unpack/fridaUnpack');
 import {Anti} from "./android/Anti";
@@ -501,17 +499,23 @@ export namespace FCAnd {
 
 
     export function registGson() {
-        const dexbase64 = gjson_dex;
-        DMLog.i('registGson', 'entry: ' + dexbase64.length);
+        // const dexbase64 = gjson_dex;
+        // DMLog.i('registGson', 'entry: ' + dexbase64.length);
+        //
+        // var application = Java.use("android.app.Application");
+        // const bytes = new Buffer(dexbase64, 'base64');
+        // const dexpath = application.$f.cacheDir + '/gson.jar';
+        // const f = new File(dexpath, 'wb+');
+        // f.write(bytes.buffer as ArrayBuffer);
+        // f.flush()
+        // f.close()
+        try {
+            let dexpath = '/data/local/tmp/fclibs/gson.jar';
+            Java.openClassFile(dexpath).load();
+        }
+        catch (e) {
+            DMLog.e('registGson', 'exception, please try to run `setupAndorid.py`')
+        }
 
-        var application = Java.use("android.app.Application");
-        const bytes = new Buffer(dexbase64, 'base64');
-        const dexpath = application.$f.cacheDir + '/gson.jar';
-        const f = new File(dexpath, 'wb+');
-        f.write(bytes.buffer as ArrayBuffer);
-        f.flush()
-        f.close()
-
-        Java.openClassFile(dexpath).load();
     }
 }

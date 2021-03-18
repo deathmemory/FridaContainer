@@ -7,7 +7,7 @@ npm build 后，用 Pycharm 打开编辑，可以看到 frida api 代码补全�
 
 ## 1. 编译和使用
 
-### 1.1 源码直接使用
+### 1.1 源码直接使用【推荐】
 
 需要根据自己的需求修改 index.ts，编写实际操作内容。
 使用 index.ts 入口方式可以按照以下方式编译和调用。
@@ -25,6 +25,14 @@ $ frida -U -f com.example.android --no-pause -l _fcagent.js
 
 ```sh
 $ npm run watch
+```
+
+- Setup for android
+
+为 Andriod 手机初始化环境以应用第三方库(gson)
+
+```shell script
+$ python setupAndroid.py
 ```
 
 ### 1.2 作为 npm node 模块使用
