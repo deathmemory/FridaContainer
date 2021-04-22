@@ -137,31 +137,37 @@ export namespace FCAnd {
         Log.d.overload('java.lang.String', 'java.lang.String')
             .implementation = function (tag: string, content: string) {
             DMLog.i('Log d', 'tag: ' + tag + ', content: ' + content);
+            return 0;
         };
         Log.v.overload('java.lang.String', 'java.lang.String')
             .implementation = function (tag: string, content: string) {
             DMLog.i('Log v', 'tag: ' + tag + ', content: ' + content);
+            return 0;
         };
         Log.i.overload('java.lang.String', 'java.lang.String')
             .implementation = function (tag: string, content: string) {
             DMLog.i('Log i', 'tag: ' + tag + ', content: ' + content);
+            return 0;
         };
         Log.w.overload('java.lang.String', 'java.lang.String')
             .implementation = function (tag: string, content: string) {
             DMLog.i('Log w', 'tag: ' + tag + ', content: ' + content);
+            return 0;
         };
         Log.e.overload('java.lang.String', 'java.lang.String')
             .implementation = function (tag: string, content: string) {
             DMLog.i('Log e', 'tag: ' + tag + ', content: ' + content);
+            return 0;
         };
         Log.wtf.overload('java.lang.String', 'java.lang.String')
             .implementation = function (tag: string, content: string) {
             DMLog.i('Log wtf', 'tag: ' + tag + ', content: ' + content);
+            return 0;
         };
     }
 
     export function dump_dex_common() {
-        fridaUnpack.dump_dex_common();
+        fridaUnpack.unpack_common();
     }
 
     export function traceLoadlibrary() {
@@ -232,6 +238,10 @@ export namespace FCAnd {
         return ctx;
     }
 
+    /**
+     * 将 java byte array 打印成 16 进制字符输出
+     * @param jbytes
+     */
     export function printByteArray(jbytes: any) {
         // return JSON.stringify(jbytes);
         var result = "";
