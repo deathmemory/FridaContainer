@@ -532,8 +532,8 @@ export namespace FCAnd {
      * @param clsname
      * @param callback 传回找到的类
      */
-    export function useWithMultiDex(clsname: string, callback: (cls: Java.Wrapper) => void) {
-        const tag = 'useWithMultiDex';
+    export function useWithDexClassLoader(clsname: string, callback: (cls: Java.Wrapper) => void) {
+        const tag = 'useWithDexClassLoader';
         var dexclassLoader = Java.use("dalvik.system.DexClassLoader");
         //hook its constructor $init, we will print out its four parameters.
         dexclassLoader.$init.implementation = function (dexPath, optimizedDirectory, librarySearchPath, parent) {
@@ -554,6 +554,22 @@ export namespace FCAnd {
         }
     }
 
+    export function useWhenLoadClass(clsname: string, callback: (cls: Java.Wrapper) => void) {
+        // java.lang.ClassLoader#loadClass(java.lang.String, boolean)
+        const ClassLoader = Java.use('java.lang.ClassLoader');
+        ClassLoader.loadClass.overload('java.lang.String', 'boolean').implementation = function (name: string, b: boolean) {
+            // DMLog.i('loadClass', 'name: ' + name);
+            const cls = this.loadClass(name, b);
+            if (name.indexOf(clsname) > -1) {
+                const clsFactory = Java.ClassFactory.get(this);
+                const useCls = clsFactory.use(clsname);
+                DMLog.e('loadClass', 'name: ' + name);
+                callback(useCls);
+            }
+            return cls;
+        };
+    }
+
     /**
      * 通过 InMemoryDexClassLoader 加载的多 Dex，可用此方法按类名 use 并 callback 返回
      * @param clsname
@@ -566,6 +582,29 @@ export namespace FCAnd {
         InMemoryDexClassLoader.$init.overload('java.nio.ByteBuffer', 'java.lang.ClassLoader')
             .implementation = function (buff, loader) {
             this.$init(buff, loader);
+            let clsFactory = Java.ClassFactory.get(this);
+            try {
+                let result = clsFactory.use(clsname);
+                DMLog.w(tag, JSON.stringify(result));
+                callback(result);
+            } catch (e) {
+                DMLog.e(tag, `${clsname} not found: ${e}`);
+            }
+        }
+    }
+
+    export function useWithBaseDexClassLoader(clsname: string, callback: (cls: Java.Wrapper) => void) {
+        const tag = 'useWithBaseDexClassLoader';
+        var dexclassLoader = Java.use("dalvik.system.BaseDexClassLoader");
+        //hook its constructor $init, we will print out its four parameters.
+        dexclassLoader.$init.overload('java.lang.String', 'java.io.File', 'java.lang.String', 'java.lang.ClassLoader')
+            .implementation = function (dexPath, optimizedDirectory, librarySearchPath, parent) {
+            DMLog.d(tag, "dexPath: " + dexPath);
+            DMLog.d(tag, "optimizedDirectory: " + optimizedDirectory);
+            DMLog.d(tag, "librarySearchPath: " + librarySearchPath);
+            DMLog.d(tag, "parent: " + parent);
+            //Without breaking its original logic, we call its original constructor.
+            this.$init(dexPath, optimizedDirectory, librarySearchPath, parent);
             let clsFactory = Java.ClassFactory.get(this);
             try {
                 let result = clsFactory.use(clsname);

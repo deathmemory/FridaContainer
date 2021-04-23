@@ -39,7 +39,7 @@ export namespace Anti {
      * @deprecated The method should not be used
      */
     export function anti_InMemoryDexClassLoader(callbackfunc: any) {
-        throw new Error("deprecated method, should use:  FCAnd.useWithMultiDex");
+        throw new Error("deprecated method, should use:  FCAnd.useWithInMemoryDexClassLoader");
     }
 
     export function anti_debug() {
