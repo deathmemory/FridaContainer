@@ -8,7 +8,6 @@
 import {DMLog} from "../dmlog";
 import {FCCommon} from "../FCCommon";
 
-const anti_InMemoryDexClassLoader = require("./anti/AntiDexLoader");
 const sslPinningPass = require("./repinning");
 const unpinning = require("./multi_unpinning");
 
@@ -22,10 +21,25 @@ export namespace Anti {
      *     const cls = Java.use('find/same/multi/dex/class');
      *     // ...
      * });
+     *
+     * 实现原理：
+     * const InMemoryDexClassLoader = Java.use('dalvik.system.InMemoryDexClassLoader');
+     InMemoryDexClassLoader.$init.overload('java.nio.ByteBuffer', 'java.lang.ClassLoader')
+     .implementation = function (buff, loader) {
+            this.$init(buff, loader);
+            var oldcl = Java.classFactory.loader;
+            Java.classFactory.loader = this;
+            callbackfunc();
+            Java.classFactory.loader = oldcl;
+
+            return undefined;
+        }
      * @param callbackfunc
+     *
+     * @deprecated The method should not be used
      */
     export function anti_InMemoryDexClassLoader(callbackfunc: any) {
-        anti_InMemoryDexClassLoader(callbackfunc);
+        throw new Error("deprecated method, should use:  FCAnd.useWithMultiDex");
     }
 
     export function anti_debug() {

@@ -65,6 +65,19 @@ FCAnd.jni.traceAllJNISimply();
 
 ![jnitracepic](./pics/jnitracelog.jpg)
 
+## frida multi dex hook(java use)
+目前支持通过 DexClassLoader 和 InMemoryDexClassLoader 动态加载的 Dex  
+
+```typescript
+FCAnd.useWithMultiDex('com.cls.name', function (cls: Wrapper) {
+    DMLog.i('tag', JSON.stringify(cls));
+});
+
+FCAnd.useWithInMemoryDexClassLoader('com.cls.name', function (cls: Wrapper) {
+    DMLog.i('tag', JSON.stringify(cls));
+});
+```
+
 ## 打印堆栈
 ```typescript
 FCAnd.showStacks();

@@ -64,6 +64,7 @@ $ python setupAndroid.py
 5. Hook JNI
 6. Java methods trace
 7. JNI trace
+8. frida multi dex hook(java use)
 
 ......
 

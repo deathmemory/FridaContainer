@@ -5,7 +5,6 @@
  * @time: 2020/4/16 5:03 PM
  * @desc:
  */
-
 const fridaUnpack = require('./android/unpack/fridaUnpack');
 import {Anti} from "./android/Anti";
 import {Jni} from "./android/jnimgr";
@@ -522,10 +521,59 @@ export namespace FCAnd {
         try {
             let dexpath = '/data/local/tmp/fclibs/gson.jar';
             Java.openClassFile(dexpath).load();
-        }
-        catch (e) {
+        } catch (e) {
             DMLog.e('registGson', 'exception, please try to run `setupAndorid.py`')
         }
 
+    }
+
+    /**
+     * 通过 DexClassLoader 加载的多 Dex，可用此方法按类名 use 并 callback 返回
+     * @param clsname
+     * @param callback 传回找到的类
+     */
+    export function useWithMultiDex(clsname: string, callback: (cls: Java.Wrapper) => void) {
+        const tag = 'useWithMultiDex';
+        var dexclassLoader = Java.use("dalvik.system.DexClassLoader");
+        //hook its constructor $init, we will print out its four parameters.
+        dexclassLoader.$init.implementation = function (dexPath, optimizedDirectory, librarySearchPath, parent) {
+            DMLog.d(tag, "dexPath: " + dexPath);
+            DMLog.d(tag, "optimizedDirectory: " + optimizedDirectory);
+            DMLog.d(tag, "librarySearchPath: " + librarySearchPath);
+            DMLog.d(tag, "parent: " + parent);
+            //Without breaking its original logic, we call its original constructor.
+            this.$init(dexPath, optimizedDirectory, librarySearchPath, parent);
+            let clsFactory = Java.ClassFactory.get(this);
+            try {
+                let result = clsFactory.use(clsname);
+                DMLog.w(tag, JSON.stringify(result));
+                callback(result);
+            } catch (e) {
+                DMLog.e(tag, `${clsname} not found: ${e}`);
+            }
+        }
+    }
+
+    /**
+     * 通过 InMemoryDexClassLoader 加载的多 Dex，可用此方法按类名 use 并 callback 返回
+     * @param clsname
+     * @param callback 传回找到的类
+     */
+    export function useWithInMemoryDexClassLoader(clsname: string, callback: (cls: Java.Wrapper) => void) {
+        const tag = 'useWithInMemoryDexClassLoader';
+        //  dalvik.system.InMemoryDexClassLoader
+        const InMemoryDexClassLoader = Java.use('dalvik.system.InMemoryDexClassLoader');
+        InMemoryDexClassLoader.$init.overload('java.nio.ByteBuffer', 'java.lang.ClassLoader')
+            .implementation = function (buff, loader) {
+            this.$init(buff, loader);
+            let clsFactory = Java.ClassFactory.get(this);
+            try {
+                let result = clsFactory.use(clsname);
+                DMLog.w(tag, JSON.stringify(result));
+                callback(result);
+            } catch (e) {
+                DMLog.e(tag, `${clsname} not found: ${e}`);
+            }
+        }
     }
 }
