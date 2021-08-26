@@ -671,7 +671,7 @@ export namespace FCAnd {
                     onLeave: function (retval) {
                         if (undefined != this.buf) {
                             const retlen = retval.toInt32();
-                            DMLog.i(module_export.name + '_onLeave', "recv size:" + retval);
+                            DMLog.i(module_export.name + '_onLeave', "size:" + retval);
                             if (-1 != retlen) {
                                 DMLog.i(module_export.name + '_onLeave', hexdump(this.buf, {
                                     offset: 0,
