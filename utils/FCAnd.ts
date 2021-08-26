@@ -673,7 +673,7 @@ export namespace FCAnd {
                             const retlen = retval.toInt32();
                             DMLog.i(module_export.name + '_onLeave', "size:" + retval);
                             if (-1 != retlen) {
-                                DMLog.i(module_export.name + '_onLeave', hexdump(this.buf, {
+                                DMLog.i(module_export.name + '_onLeave', "\n" + hexdump(this.buf, {
                                     offset: 0,
                                     length: retlen,
                                     header: true,
