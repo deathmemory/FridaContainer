@@ -696,7 +696,7 @@ export namespace FCAnd {
     export function replaceMemoryData(addr: NativePointer, size: number, pattern: string, distarr: ArrayBuffer | number[], replaceAll: boolean) {
         const tag = 'replaceMemoryData';
         let dest = Memory.scanSync(addr, size, pattern);
-        if (null != dest) {
+        if (null != dest && dest.length >  0) {
             DMLog.i(tag, 'found dest');
             if (replaceAll) {
                 dest.forEach(function (match) {
