@@ -117,4 +117,13 @@ export namespace FCCommon {
             DMLog.i('enumerateModules', JSON.stringify(module));
         });
     }
+
+    export function str2hexstr(str: string) {
+        let res = str.split("").map(x => x.charCodeAt(0).toString(16).padStart(2, "0")).join("");
+        return res;
+    }
+
+    export function str2hexArray(str: string) {
+        return str.split("").map(x => x.charCodeAt(0));
+    }
 }

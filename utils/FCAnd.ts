@@ -417,7 +417,7 @@ export namespace FCAnd {
                                 tid: tid,
                                 status: 'entry',
                                 tname: tname,
-                                classname: clsname,
+                                classname: clsname + '_$init',
                                 method: overload.holder.toString(),
                                 method_: overload._p[0],
                                 args: arguments
@@ -554,6 +554,11 @@ export namespace FCAnd {
         }
     }
 
+    /**
+     *
+     * @param clsname   ex: org.chromium.base.PathUtils
+     * @param callback
+     */
     export function useWhenLoadClass(clsname: string, callback: (cls: Java.Wrapper) => void) {
         // java.lang.ClassLoader#loadClass(java.lang.String, boolean)
         const ClassLoader = Java.use('java.lang.ClassLoader');
@@ -612,6 +617,96 @@ export namespace FCAnd {
                 callback(result);
             } catch (e) {
                 DMLog.e(tag, `${clsname} not found: ${e}`);
+            }
+        }
+    }
+
+    export function showNativeStacks(context: any) {
+        DMLog.i('showNativeStacks', '\tBacktrace:\n\t' + Thread.backtrace(context,
+            Backtracer.ACCURATE).map(DebugSymbol.fromAddress)
+            .join('\n\t'));
+    }
+
+    export function hook_send_recv() {
+        // lets search for common shared lib
+        var myModule = Process.getModuleByName('libc.so');
+        var myFuncs = ['recv', 'send'];
+        // var myFuncs = ['send'];
+
+        // attach only to functions that have recv or send in name (includes recv, recvmsg, recvfrom, send ,sendmsg, sendto)
+        myModule.enumerateExports().filter(module_export => module_export.type === 'function' &&
+            myFuncs.some(fName => module_export.name.includes(fName)))
+            .forEach(module_export => {
+                Interceptor.attach(module_export.address, {
+                    onEnter: function (args) { // every time we enter one of the functions, we will log this
+                        const tag = module_export.name + "_onEnter";
+                        //get function args
+                        var fd = args[0].toInt32(); // every function has first argument an FD, so it is safe to do this
+
+                        // error mitigation checks
+                        // from frida.Socket (check if socket is TCP and if it has an external IP address)
+                        var socktype = Socket.type(fd);
+                        var sockaddr = Socket.peerAddress(fd);
+                        if ((socktype !== 'tcp' && socktype !== 'tcp6') || sockaddr === null)
+                            return;
+
+                        try {
+                            var len = args[2].toInt32();
+                            this.buf = new NativePointer(args[1]);
+                            var data = {
+                                'event': module_export.name,
+                                'fd': fd,
+                                'sockaddr': sockaddr,
+                                'socktype': socktype
+                                // 'buffer': printByte2(buf2hex(buf))
+                            }
+
+                            DMLog.i(tag, '\n');
+                            DMLog.i(tag, JSON.stringify(data));
+                            FCAnd.showNativeStacks(this.context);
+                        } catch (err) {
+                            DMLog.e(tag, err);
+                        }
+                    },
+                    onLeave: function (retval) {
+                        if (undefined != this.buf) {
+                            const retlen = retval.toInt32();
+                            DMLog.i(module_export.name + '_onLeave', "recv size:" + retval);
+                            if (-1 != retlen) {
+                                DMLog.i(module_export.name + '_onLeave', hexdump(this.buf, {
+                                    offset: 0,
+                                    length: retlen,
+                                    header: true,
+                                    ansi: false
+                                }));
+                            }
+                        }
+                    }
+                })
+            });
+    }
+
+    /**
+     * 搜索内存并替换目标值
+     * @param addr      搜索起始地址
+     * @param size      大小范围
+     * @param pattern   FCCommon.str2hexstr("3C8F4F55D4B548E4EDBB1157EFAC3FC1")
+     * @param distarr   替换数据，字符串可以用 FCCommon.str2hexArray("kkkkkkk")) 的返回值
+     */
+    export function replaceMemoryData(addr: NativePointer, size: number, pattern: string, distarr: ArrayBuffer | number[], replaceAll: boolean) {
+        const tag = 'replaceMemoryData';
+        let dest = Memory.scanSync(addr, size, pattern);
+        if (null != dest) {
+            DMLog.i(tag, 'found dest');
+            if (replaceAll) {
+                dest.forEach(function (match) {
+                    match.address.writeByteArray(distarr);
+                    DMLog.i(tag, "foreach replaced address: " + match.address);
+                });
+            }
+            else {
+                dest[0].address.writeByteArray(distarr);
+                DMLog.i(tag, "replaced address: " + dest[0].address);
             }
         }
     }

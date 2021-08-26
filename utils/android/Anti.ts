@@ -52,6 +52,7 @@ export namespace Anti {
 
     export function anti_exit() {
         const exit_ptr = Module.findExportByName(null, 'exit');
+        DMLog.i('anti_exit', "exit_ptr : " + exit_ptr);
         if (null == exit_ptr) {
             return;
         }
@@ -67,6 +68,8 @@ export namespace Anti {
 
     export function anti_kill() {
         const kill_ptr = Module.findExportByName(null, 'kill');
+        DMLog.i('anti_kill', "kill_ptr : " + kill_ptr);
+
         if (null == kill_ptr) {
             return;
         }

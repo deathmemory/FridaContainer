@@ -98,6 +98,27 @@ class TraceLogCleaner:
         if os.path.isdir(self.saveDir):
             shutil.rmtree(self.saveDir)
 
+    def washWithSpawn(self, jspath, packagename):
+        dev = frida.get_usb_device()
+        app_pid = dev.spawn(packagename)
+        session = dev.attach(app_pid)
+        self._doWash(session, jspath)
+        dev.resume(app_pid)
+
+        sys.stdin.read()
+        session.detach()
+
+    def _doWash(self, session, jspath):
+        with codecs.open(jspath, 'r', 'utf-8') as f:
+            jscode = f.read()
+            f.close()
+            self.mkdirSaveDir()
+            script = session.create_script(jscode, runtime="v8")
+            # session.enable_jit()
+            session.enable_debugger()
+            script.on('message', self.onMessage)
+            script.load()
+
     def washOnMessage(self, jspath):
         with codecs.open(jspath, 'r', 'utf-8') as f:
             jscode = f.read()
@@ -186,10 +207,12 @@ class TraceLogCleaner:
         return fmt
 
 
+
 if __name__ == '__main__':
     tdc = TraceLogCleaner(bFmt=True)
     tdc.clean()
     tdc.washOnMessage('../../_fcagent.js')
+    # tdc.washWithSpawn('../../_fcagent.js', 'com.baidu.BaiduMap')
 
     # tdc.washFile(path='tdc_dir/test_31523')
 
