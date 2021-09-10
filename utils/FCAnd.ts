@@ -311,7 +311,7 @@ export namespace FCAnd {
      * @param clsWhitelist
      * @param stackFilter
      */
-    export function traceJavaMethods_custom(clazzes: string[], clsWhitelist?: null | any, stackFilter?: string) {
+    export function traceJavaMethods_custom(clazzes: string[], clsWhitelist?: null | any, stackFilter?: null | string) {
 
         function match(destCls: string, curClsName: string) {
             let mode = destCls[0];
@@ -583,19 +583,24 @@ export namespace FCAnd {
     export function useWithInMemoryDexClassLoader(clsname: string, callback: (cls: Java.Wrapper) => void) {
         const tag = 'useWithInMemoryDexClassLoader';
         //  dalvik.system.InMemoryDexClassLoader
-        const InMemoryDexClassLoader = Java.use('dalvik.system.InMemoryDexClassLoader');
-        InMemoryDexClassLoader.$init.overload('java.nio.ByteBuffer', 'java.lang.ClassLoader')
-            .implementation = function (buff, loader) {
-            this.$init(buff, loader);
-            let clsFactory = Java.ClassFactory.get(this);
-            try {
-                let result = clsFactory.use(clsname);
-                DMLog.w(tag, JSON.stringify(result));
-                callback(result);
-            } catch (e) {
-                DMLog.e(tag, `${clsname} not found: ${e}`);
+        try {
+            const InMemoryDexClassLoader = Java.use('dalvik.system.InMemoryDexClassLoader');
+            InMemoryDexClassLoader.$init.overload('java.nio.ByteBuffer', 'java.lang.ClassLoader')
+                .implementation = function (buff, loader) {
+                this.$init(buff, loader);
+                let clsFactory = Java.ClassFactory.get(this);
+                try {
+                    let result = clsFactory.use(clsname);
+                    DMLog.w(tag, JSON.stringify(result));
+                    callback(result);
+                } catch (e) {
+                    DMLog.e(tag, `${clsname} not found: ${e}`);
+                }
             }
+        } catch (e) {
+            DMLog.e(tag, e.toString());
         }
+
     }
 
     export function useWithBaseDexClassLoader(clsname: string, callback: (cls: Java.Wrapper) => void) {
@@ -696,7 +701,7 @@ export namespace FCAnd {
     export function replaceMemoryData(addr: NativePointer, size: number, pattern: string, distarr: ArrayBuffer | number[], replaceAll: boolean) {
         const tag = 'replaceMemoryData';
         let dest = Memory.scanSync(addr, size, pattern);
-        if (null != dest && dest.length >  0) {
+        if (null != dest && dest.length > 0) {
             DMLog.i(tag, 'found dest');
             if (replaceAll) {
                 dest.forEach(function (match) {
@@ -709,5 +714,55 @@ export namespace FCAnd {
                 DMLog.i(tag, "replaced address: " + dest[0].address);
             }
         }
+    }
+
+    /**
+     * 各种搜类，发现其是否能找到该类
+     * 该方法通常用于启动时类的搜索
+     * @param clsname
+     */
+    export function findClass(clsname: string) {
+        FCAnd.useWhenLoadClass(clsname, function (cls) {
+            DMLog.i('findclass useWhenLoadClass', "" + cls);
+        });
+        FCAnd.useWithDexClassLoader(clsname, function (cls) {
+            DMLog.i('findclass useWithDexClassLoader', "" + cls);
+        });
+        FCAnd.useWithBaseDexClassLoader(clsname, function (cls) {
+            DMLog.i('findclass useWithBaseDexClassLoader', "" + cls);
+        });
+        FCAnd.useWithInMemoryDexClassLoader(clsname, function (cls) {
+            DMLog.i('findclass useWithInMemoryDexClassLoader', "" + cls);
+        });
+    }
+
+    /**
+     * 枚举 ClassLoader 找到相应的类，执行 callback
+     * @param clsname
+     * @param callback
+     */
+    export function enumerateClassLoadersAndUse(clsname: string, callback: (cls: Java.Wrapper) => void) {
+        const tag = 'enumerateClassLoadersAndUse';
+        Java.enumerateClassLoaders({
+            onMatch(loader) {
+                try {
+                    let cls = loader.loadClass(clsname);
+                    if (null != cls) {
+                        DMLog.i(tag, "found cls: " + cls);
+
+                        let cf = Java.ClassFactory.get(loader);
+
+                        let cls1 = cf.use(clsname);
+                        callback(cls1);
+                    }
+
+                } catch (e) {
+                    DMLog.e(tag, e.toString());
+                }
+            },
+            onComplete() {
+                DMLog.i(tag, 'completed .');
+            }
+        });
     }
 }
