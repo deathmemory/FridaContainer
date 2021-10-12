@@ -543,13 +543,10 @@ export namespace FCAnd {
             DMLog.d(tag, "parent: " + parent);
             //Without breaking its original logic, we call its original constructor.
             this.$init(dexPath, optimizedDirectory, librarySearchPath, parent);
-            let clsFactory = Java.ClassFactory.get(this);
-            try {
-                let result = clsFactory.use(clsname);
-                DMLog.w(tag, JSON.stringify(result));
-                callback(result);
-            } catch (e) {
-                DMLog.e(tag, `${clsname} not found: ${e}`);
+            let cls = this.loadClass(clsname);
+            if (null != cls) {
+                DMLog.w('dex_loadclass', 'found: ' + clsname);
+                callback(cls);
             }
         }
     }
@@ -562,14 +559,19 @@ export namespace FCAnd {
     export function useWhenLoadClass(clsname: string, callback: (cls: Java.Wrapper) => void) {
         // java.lang.ClassLoader#loadClass(java.lang.String, boolean)
         const ClassLoader = Java.use('java.lang.ClassLoader');
-        ClassLoader.loadClass.overload('java.lang.String', 'boolean').implementation = function (name: string, b: boolean) {
+        ClassLoader.loadClass.overload('java.lang.String').implementation = function (name: string) {
             // DMLog.i('loadClass', 'name: ' + name);
-            const cls = this.loadClass(name, b);
+            const cls = this.loadClass(name);
             if (name.indexOf(clsname) > -1) {
-                const clsFactory = Java.ClassFactory.get(this);
-                const useCls = clsFactory.use(clsname);
-                DMLog.e('loadClass', 'name: ' + name);
-                callback(useCls);
+                DMLog.w('useWhenLoadClass', `name: ${clsname} matched!`)
+                try {
+                    const clsFactory = Java.ClassFactory.get(this);
+                    const useCls = clsFactory.use(clsname);
+                    DMLog.e('loadClass', 'name: ' + name);
+                    callback(useCls);
+                } catch (e) {
+                    DMLog.e('useWhenLoadClass', 'exception: ' + e);
+                }
             }
             return cls;
         };
@@ -762,6 +764,33 @@ export namespace FCAnd {
             },
             onComplete() {
                 DMLog.i(tag, 'completed .');
+            }
+        });
+    }
+
+    /**
+     * 当指定 so 加载时，进行 attach
+     * @param soname
+     * @param offsetAddr
+     * @param callback
+     */
+    export function attachWhenSoLoad(soname: string, offsetAddr: number, callback: InvocationListenerCallbacks | InstructionProbeCallback) {
+        const VERSION = Java.use('android.os.Build$VERSION');
+        let dlopenFuncName = "android_dlopen_ext";
+        if (VERSION.SDK_INT.value <= 23) { // 6.0 以上版本
+            dlopenFuncName = "dlopen";
+        }
+        Interceptor.attach(Module.findExportByName(null, dlopenFuncName) !, {
+            onEnter: function (args) {
+                this.sopath = args[0].readCString();
+            },
+            onLeave: function (retval) {
+                let sopath = this.sopath;
+                DMLog.d('attachWhenSoLoad dlopen', `sopath: ${sopath}`);
+                if (null != sopath && sopath.indexOf(soname) > -1) {
+                    let mod = Module.load(sopath);
+                    Interceptor.attach(mod.base.add(offsetAddr), callback);
+                }
             }
         });
     }

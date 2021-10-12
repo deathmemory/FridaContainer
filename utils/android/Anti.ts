@@ -7,6 +7,7 @@
  */
 import {DMLog} from "../dmlog";
 import {FCCommon} from "../FCCommon";
+import {FCAnd} from "../FCAnd";
 
 const sslPinningPass = require("./repinning");
 const unpinning = require("./multi_unpinning");
@@ -79,6 +80,7 @@ export namespace Anti {
             }
             var lr = FCCommon.getLR(this.context);
             DMLog.i('kill debug', 'entry, lr: ' + lr);
+            FCAnd.showNativeStacks(this.context);
             return 0;
         }, 'int', ['int', 'int']));
     }
@@ -140,6 +142,7 @@ export namespace Anti {
                 if (logTag) {
                     DMLog.i(tag + " " + logTag, bufstr + " -> " + buffer.readCString() + ' lr: ' + lr
                         + "(" + FCCommon.getModuleByAddr(lr) + ")");
+                    FCAnd.showNativeStacks(this?.context);
                 }
             }
             return retval;
