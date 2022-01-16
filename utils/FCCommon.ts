@@ -126,4 +126,10 @@ export namespace FCCommon {
     export function str2hexArray(str: string) {
         return str.split("").map(x => x.charCodeAt(0));
     }
+
+    export function arrayBuffer2Hex(buf: any) {
+        return [...new Uint8Array(buf)]
+              .map(x => x.toString(16).padStart(2, '0'))
+              .join(' ');
+    }
 }

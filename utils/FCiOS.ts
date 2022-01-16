@@ -6,28 +6,39 @@
  * @desc:
  */
 import {DMLog} from "./dmlog";
+import {AntiIOS} from "./ios/AntiIOS";
 
 export namespace FCiOS {
+
+    export const anti = AntiIOS;
+
+    export let nil = ObjC.available ? new ObjC.Object(ptr("0x0")) : null;
+
     // generic getFuncAddr
     export function getFuncAddr(pattern: string): NativePointer {
         var tag = 'getFuncAddr';
-        var type: ApiResolverType = (pattern.indexOf(" ") === -1) ? "module" : "objc";
-        DMLog.i(tag, 'getFuncAddr type: ' + type);
-        var res: ApiResolver = new ApiResolver(type);
-        DMLog.i(tag, 'getFuncAddr ApiResolver: ' + JSON.stringify(res));
-        var matches = res.enumerateMatches(pattern);
-        DMLog.i(tag, 'getFuncAddr matches: ' + JSON.stringify(matches));
-        var targets = uniqBy(matches, JSON.stringify);
-
+        let targets = FCiOS.findAllByPattern(pattern);
         var targetAddr = NULL;
         targets.forEach(function (target: any) {
-            DMLog.i(tag, 'target.name: ' + target.name + ', target.address: ' + target.address);
+            DMLog.d(tag, 'target.name: ' + target.name + ', target.address: ' + target.address);
             targetAddr = target.address;
             // end forEach
             return false;
         });
 
         return targetAddr;
+    }
+
+    export function findAllByPattern(pattern: string) {
+        var tag = 'findAllByPattern';
+        var type: ApiResolverType = (pattern.indexOf(" ") === -1) ? "module" : "objc";
+        DMLog.d(tag, 'getFuncAddr type: ' + type);
+        var res: ApiResolver = new ApiResolver(type);
+        DMLog.d(tag, 'getFuncAddr ApiResolver: ' + JSON.stringify(res));
+        var matches = res.enumerateMatches(pattern);
+        DMLog.d(tag, 'getFuncAddr matches: ' + JSON.stringify(matches));
+        var targets = uniqBy(matches, JSON.stringify);
+        return targets;
     }
 
     // remove duplicates from array
@@ -49,8 +60,7 @@ export namespace FCiOS {
         try {
             var current_window = ObjC.classes.UIWindow.keyWindow();
             return current_window.recursiveDescription().toString();
-        }
-        catch (e) {
+        } catch (e) {
             return e;
         }
 
@@ -76,7 +86,7 @@ export namespace FCiOS {
                 // Convert it to a JS string
                 var myJSURL = myNSURL.absoluteString().toString();
                 // Log it
-                DMLog.i('openURL', "Launching URL: " + myJSURL);
+                DMLog.d('openURL', "Launching URL: " + myJSURL);
                 //send(myJSURL);
             }
         });
@@ -89,7 +99,7 @@ export namespace FCiOS {
         if (NSLog_ptr) {
             Interceptor.attach(NSLog_ptr, {
                 onEnter: function (args) {
-                    DMLog.i('NSLog', new ObjC.Object(args[0]).toString());
+                    DMLog.d('NSLog', new ObjC.Object(args[0]).toString());
                 }
             });
         }
@@ -99,9 +109,51 @@ export namespace FCiOS {
         if (NSLogv_ptr) {
             Interceptor.attach(NSLogv_ptr, {
                 onEnter: function (args) {
-                    DMLog.i('NSLogv', new ObjC.Object(args[0]).toString());
+                    DMLog.d('NSLogv', new ObjC.Object(args[0]).toString());
                 }
             });
         }
+    }
+
+    /**
+     * var NSString = ObjC.use("NSString");
+        var str = ObjC.cast(ptr("0x1234"), NSString);
+     * -- or --
+     * var str = ObjC.Object(ptr("0x1234"));
+     * @param val
+     */
+    export function newString(val: any) {
+        try {
+            return ObjC.classes.NSString.stringWithString_(val);
+        } catch (e) {
+            return val;
+        }
+    }
+
+    export function getClassName(id: any) {
+        return new ObjC.Object(id).$className;
+    }
+
+    export function printNSDictionary(id: any) {
+        var dict = new ObjC.Object(id);
+        var enumerator = dict.keyEnumerator();
+        var key;
+        while ((key = enumerator.nextObject()) !== null) {
+            var value = dict.objectForKey_(key);
+            DMLog.d('printNSDictionary', "key: " + key + ", val: " + value);
+        }
+    }
+
+    export function justTouch(pattern: string) {
+        let tgtarr;
+        tgtarr = FCiOS.findAllByPattern(pattern);
+        tgtarr.forEach(function (target: any) {
+            DMLog.d('justTouch', `${target.name} attach ed`);
+            Interceptor.attach(target.address, {
+                onEnter: function (args) {
+                    DMLog.d('justTouch', `==== name: ${target.name} onEnter ====`);
+                }
+            });
+        });
     }
 }

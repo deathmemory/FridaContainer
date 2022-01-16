@@ -1,5 +1,5 @@
 export class DMLog {
-    private static bDebug: boolean = true;
+    static bDebug: boolean = true;
 
     static d(tag: string, str: string) {
         if (this.bDebug) {
