@@ -75,11 +75,12 @@ export namespace FCCommon {
         const savePath: string = saveDir + "/" + moduleName + "_" + base + "_" + size + ".fcdump";
         DMLog.i(tag, "base: " + base + ", size: " + size);
         DMLog.i(tag, "save path: " + savePath);
+        Memory.protect(base, size, "rwx");
+        
         let readed = base.readByteArray(size);
         try {
             const f = new File(savePath, "wb");
             if (f) {
-                Memory.protect(base, size, "rwx");
                 if (readed) {
                     f.write(readed);
                     f.flush();
