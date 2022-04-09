@@ -65,15 +65,18 @@ $ python setupAndroid.py
 6. Java methods trace
 7. JNI trace
 8. frida multi dex hook(java use)
-
-......
+9. ......
 
 ### 2.2 iOS
 
 - [iOS 详细文档](docs/ios.md)
 
 1. 便捷的获取函数地址
-2. 打印堆栈
+2. 模糊查找函数地址
+3. 打印堆栈
+4. dump ui 结构
+5. 常见数据类型转换及打印
+6. ......
 
 ### 2.3 FCCommon 跨平台通用方法
 

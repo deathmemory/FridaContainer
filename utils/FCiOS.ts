@@ -29,6 +29,11 @@ export namespace FCiOS {
         return targetAddr;
     }
 
+    /**
+     * 模糊查找所有符合规则的函数
+     * 示例参考: examples/ios_hook_all_base64.ts
+     * @param pattern
+     */
     export function findAllByPattern(pattern: string) {
         var tag = 'findAllByPattern';
         var type: ApiResolverType = (pattern.indexOf(" ") === -1) ? "module" : "objc";
@@ -128,6 +133,10 @@ export namespace FCiOS {
         } catch (e) {
             return val;
         }
+    }
+
+    export function nsdataToString(nsdata: any) {
+        return ObjC.classes.NSString.alloc().initWithData_encoding_(nsdata, 4);
     }
 
     export function getClassName(id: any) {
