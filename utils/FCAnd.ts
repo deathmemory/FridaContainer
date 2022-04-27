@@ -775,6 +775,12 @@ export namespace FCAnd {
      * @param callback
      */
     export function attachWhenSoLoad(soname: string, offsetAddr: number, callback: InvocationListenerCallbacks | InstructionProbeCallback) {
+        whenSoLoad(soname, function (mod: Module) {
+            Interceptor.attach(mod.base.add(offsetAddr), callback);
+        });
+    }
+
+    export function whenSoLoad(soname: string, callback: (mod: Module) => void) {
         const VERSION = Java.use('android.os.Build$VERSION');
         let dlopenFuncName = "android_dlopen_ext";
         if (VERSION.SDK_INT.value <= 23) { // 6.0 以上版本
@@ -786,10 +792,10 @@ export namespace FCAnd {
             },
             onLeave: function (retval) {
                 let sopath = this.sopath;
-                DMLog.d('attachWhenSoLoad dlopen', `sopath: ${sopath}`);
+                DMLog.d('WhenSoLoad dlopen', `sopath: ${sopath}`);
                 if (null != sopath && sopath.indexOf(soname) > -1) {
                     let mod = Module.load(sopath);
-                    Interceptor.attach(mod.base.add(offsetAddr), callback);
+                    callback(mod);
                 }
             }
         });
