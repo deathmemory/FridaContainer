@@ -356,6 +356,26 @@ function multi_unpinning() {
 		}
 
 
+		try {
+			let CertificatePinner = Java.use("okhttp3.CertificatePinner");
+			CertificatePinner.check.overload('java.lang.String', 'java.util.List').implementation = function(str, list){
+				console.log('[+] bypass CertificatePinner {1}: ' + str);
+				return;
+			};
+		}
+		catch (e) {
+			console.log('[-] CertificatePinner {1} pinner not found');
+		}
+
+		try {
+			CertificatePinner.check.overload('java.lang.String', '[Ljava.security.cert.Certificate;').implementation = function(str, certificateArr){
+				console.log('[+] bypass CertificatePinner {2}: ' + str);
+				return;
+			};
+		}
+		catch (e) {
+			console.log('[-] CertificatePinner {2} pinner not found');
+		}
 
 		// Squareup CertificatePinner [OkHTTP<v3] (double bypass) //
 		////////////////////////////////////////////////////////////

@@ -139,6 +139,13 @@ export namespace Anti {
                     buffer.writeUtf8String('SigBlk:\t0000000000001204');
                     logTag = 'SigBlk';
                 }
+
+                // frida
+                else if (bufstr.indexOf('frida') > -1) {
+                    buffer.writeUtf8String("");
+                    logTag = 'frida';
+                }
+
                 if (logTag) {
                     DMLog.i(tag + " " + logTag, bufstr + " -> " + buffer.readCString() + ' lr: ' + lr
                         + "(" + FCCommon.getModuleByAddr(lr) + ")");
