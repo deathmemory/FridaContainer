@@ -113,6 +113,16 @@ export namespace FCCommon {
         }
     }
 
+    export function dump2file(addr: NativePointer, size: number, savePath: string) {
+        DMLog.i('dump2file', `addr: ${addr.toString(16)}, size: ${size}`);
+        let file = new File(savePath, "w+");
+        let byteArr = addr.readByteArray(size);
+        if (null != byteArr) {
+            file.write(byteArr);
+        }
+        file.close();
+    }
+
     export function printModules() {
         Process.enumerateModules().forEach(function (module) {
             DMLog.i('enumerateModules', JSON.stringify(module));
@@ -133,4 +143,97 @@ export namespace FCCommon {
               .map(x => x.toString(16).padStart(2, '0'))
               .join(' ');
     }
+
+    /**
+     * stalker trace 功能
+     * 由于函数内使用 Stalker.exclude 每次使用建议重启进程，否则可能会有莫名其妙的段、访问错误
+     * @param moduleName 模块(so) 名称
+     * @param address 要监控的函数地址
+     *
+     * 用例 FCCommon.stalkerTrace("libxxx.so", addr_2333F);
+     */
+    export function stalkerTrace(moduleName: string, address: NativePointer) {
+        const tag = 'stalkerTrace';
+        let module_object = Process.findModuleByName(moduleName);
+        if (null == module_object) {
+            DMLog.e(tag, "module is null");
+            return;
+        }
+        const module_start = module_object.base;
+        const module_end = module_object.base.add(module_object.size);
+        // 开始 trace
+        let pre_regs = {};
+        // let address = module_object.base.add(offset_address);
+        // 排除不需要trace 的模块
+        Process.enumerateModules().forEach(function (md) {
+            if (md.name != moduleName) {
+                let memoryRange = {base: md.base, size: md.size};
+                Stalker.exclude(memoryRange);
+            }
+        });
+        let threadId = Process.getCurrentThreadId();
+        Interceptor.attach(address, {
+            onEnter: function (args) {
+                this.tid = threadId;
+                if (threadId == this.threadId) {
+                    this.startFollow = true;
+                    Stalker.follow(this.tid, {
+                        events: {
+                            call: true,
+                            ret: false,
+                            exec: true,
+                            block: false,
+                            compile: false
+                        },
+                        transform(iterator: any) {
+                            let instruction = iterator.next();
+                            do {
+                                const startAddress = instruction.address;
+                                const isModuleCode = startAddress.compare(module_start) >= 0 && startAddress.compare(module_end) === -1;
+                                if (isModuleCode) {
+                                    iterator.putCallout(function (context: any) {
+                                        let pc = context.pc;
+                                        let module = Process.findModuleByAddress(pc);
+                                        if (module) {
+                                            try {
+                                                let diff_regs = get_diff_regs(context, pre_regs);
+                                                if (module.name == module_object?.name) {
+                                                    DMLog.i(tag, `${module.name} ! ${pc.sub(module.base)} ${Instruction.parse(pc)} ${JSON.stringify(diff_regs)}`);
+                                                    // console.log(module.name + " ! " + pc.sub(module.base), Instruction.parse(ptr(pc)), JSON.stringify(diff_regs));
+                                                }
+                                            }
+                                            catch (e: any) {
+                                                DMLog.e(tag, e.toString());
+                                            }
+                                        }
+                                    })
+                                }
+                                iterator.keep();
+                            } while ((instruction = iterator.next()) != null);
+                        }
+                    });
+                }
+            },
+            onLeave: function (retval) {
+                if (this.startFollow != undefined && this.startFollow == true) {
+                    Stalker.unfollow(this.tid);
+                    this.startFollow = false;
+                }
+            }
+        });
+    }
+
+    export function get_diff_regs(context: any, pre_regs: any) {
+        var diff_regs = {};
+        for (const [reg_name, reg_value] of
+            Object.entries(JSON.parse(JSON.stringify(context)))) {
+            if (reg_name != "pc" && pre_regs[reg_name] !== reg_value) {
+                pre_regs[reg_name] = reg_value;
+                // @ts-ignore
+                diff_regs[reg_name] = reg_value;
+            }
+        }
+        return diff_regs;
+    }
 }
+
