@@ -159,14 +159,13 @@ export namespace Anti {
     export function anti_ptrace() {
         var ptrace = Module.findExportByName(null, "ptrace");
         if (null != ptrace) {
-            ptrace = ptrace.or(1);
             DMLog.i('anti_ptrace', "ptrace addr: " + ptrace);
             // Interceptor.attach(ptrace, {
             //     onEnter: function (args) {
             //         DMLog.i('anti_ptrace', 'entry');
             //     }
             // });
-            Interceptor.replace(ptrace.or(1), new NativeCallback(function (p1: any, p2: any, p3: any, p4: any) {
+            Interceptor.replace(ptrace, new NativeCallback(function (p1: any, p2: any, p3: any, p4: any) {
                 DMLog.i('anti_ptrace', 'entry');
                 return 1;
             }, 'long', ['int', "int", 'pointer', 'pointer']));
@@ -178,7 +177,7 @@ export namespace Anti {
      */
     export function anti_fork() {
         var fork_addr = Module.findExportByName(null, "fork");
-        DMLog.i('anti_ptrace', "fork_addr : " + fork_addr);
+        DMLog.i('anti_fork', "fork_addr : " + fork_addr);
         if (null != fork_addr) {
             // Interceptor.attach(fork_addr, {
             //     onEnter: function (args) {
