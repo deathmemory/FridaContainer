@@ -249,10 +249,27 @@ const jni_struct_array = [
 ];
 
 export namespace Jni {
+    // 定义保存函数名、签名和 jmethodID 的结构体
+    type MethodInfo = {
+        className: string,
+        methodName: string,
+        signature: string,
+        isStatic: boolean,
+    }
 
-    /* Calculate the given funcName address from the JNIEnv pointer */
+    // 保存函数名、签名和 jmethodID 的 Map
+    const methodMap = new Map<string, { methodName: string, signature: string, methodId: NativePointer, isStatic: boolean }>();
+
+
+    var have_record_method_info: Boolean = false;
+
     export function getJNIFunctionAdress(jnienv_addr: NativePointer, func_name: string) {
-        var offset = jni_struct_array.indexOf(func_name) * Process.pointerSize;
+        let idx = jni_struct_array.indexOf(func_name);
+        if (-1 == idx) {
+            DMLog.e('getJNIFunctionAdress', `func name: ${func_name} not found!`);
+            return ptr(0);
+        }
+        var offset = idx * Process.pointerSize;
         return jnienv_addr.add(offset).readPointer();
     }
 
@@ -265,8 +282,9 @@ export namespace Jni {
     }
 
     export function hookJNI(name: string, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback,
-                   data?: NativePointerValue) {
+                            data?: NativePointerValue) {
         const addr = Jni.getJNIAddr(name);
+        console.log("Jni.getJNIAddr: " + name + ", addr: " + addr);
         return Interceptor.attach(addr, callbacksOrProbe);
     }
 
@@ -323,22 +341,86 @@ export namespace Jni {
      */
     export function traceAllJNISimply() {
         // 遍历 Hook Jni 函数
-        jni_struct_array.forEach(function (func_name, idx) {
-            if (!func_name.includes("reserved")) {
-                Jni.hookJNI(func_name, {
-                    onEnter(args) {
-                        // 触发时将信息保存到对象中
-                        let md = new MethodData(this.context, func_name, JNI_ENV_METHODS[idx], args);
-                        this.md = md;
-                    },
-                    onLeave(retval) {
-                        // 退出时将返回值追加到对象中
-                        this.md.setRetval(retval);
-                        // 发送日志
-                        send(JSON.stringify({tid: this.threadId, status: "jnitrace", data: this.md}));
-                    }
-                });
-            }
-        })
+        jni_struct_array.forEach(traceJNICore);
     }
+
+    export function traceJNI(nameArray: string[]) {
+        nameArray.forEach(function (name) {
+            let idx = getJNIFunctionIndex(name);
+            DMLog.i('traceJNI', 'name: ' + name + 'idx: ' + idx);
+            if (-1 != idx) {
+                traceJNICore(name, idx);
+            }
+        });
+    }
+
+    export function traceJNICore(func_name: string, idx: number) {
+        Jni.record_method_info();
+        if (!func_name.includes("reserved")) {
+            Jni.hookJNI(func_name, {
+                onEnter(args) {
+                    // 触发时将信息保存到对象中
+                    let md = new MethodData(this.context, func_name, JNI_ENV_METHODS[idx], args);
+                    this.md = md;
+                },
+                onLeave(retval) {
+                    // 退出时将返回值追加到对象中
+                    this.md.setRetval(retval);
+                    // 发送日志
+                    send(JSON.stringify({tid: this.threadId, status: "jnitrace", data: this.md}));
+                }
+            });
+        }
+    }
+
+    export function getJNIFunctionIndex(funcName: string) {
+        return JNI_ENV_METHODS.findIndex(method => method.name === funcName);
+    }
+
+    export function record_method_info() {
+        if (have_record_method_info == false) {
+            // hook GetMethodID 函数
+            Jni.hookJNI("GetMethodID", {
+                onEnter: function (args) {
+                    // const clsObj = Java.cast(args[1], Java.use('java.lang.Class'));
+                    this.methodName = args[2].readCString();
+                    this.signature = args[3].readCString();
+                },
+                onLeave: function (retval) {
+                    // 保存函数名、签名和 jmethodID 到 Map 中
+                    methodMap.set(retval.toString(), {
+                        methodName: this.methodName,
+                        signature: this.signature,
+                        methodId: retval,
+                        isStatic: false
+                    });
+                }
+            });
+
+            // hook GetStaticMethodID 函数
+            Jni.hookJNI("GetStaticMethodID", {
+                onEnter: function (args) {
+                    this.methodName = args[2].readCString();
+                    this.signature = args[3].readCString();
+                },
+                onLeave: function (retval) {
+                    // 保存函数名、签名和 jmethodID 到 Map 中
+                    methodMap.set(retval.toString(), {
+                        methodName: this.methodName,
+                        signature: this.signature,
+                        methodId: retval,
+                        isStatic: true
+                    });
+                }
+            });
+
+            have_record_method_info = true;
+        }
+    }
+
+    // 获取函数名、签名和 jmethodID 的函数
+    export function getMethodInfo(methodId: NativePointer) {
+        return methodMap.get(methodId.toString());
+    }
+
 }

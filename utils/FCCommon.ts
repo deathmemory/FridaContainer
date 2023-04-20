@@ -100,7 +100,7 @@ export namespace FCCommon {
                 savePath_ptr.writeUtf8String(savePath);
                 const f = fopen_func(savePath_ptr, Memory.alloc(3).writeUtf8String("wb"));
                 DMLog.i(tag, 'fopen: ' + f);
-                if (f != 0 && readed) {
+                if (f != null && readed) {
                     const readed_ptr = Memory.alloc(readed.byteLength);
                     readed_ptr.writeByteArray(readed);
                     fwrite_func(readed_ptr, readed.byteLength, 1, f);

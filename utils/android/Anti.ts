@@ -101,10 +101,7 @@ export namespace Anti {
             return;
         }
         var fgets = new NativeFunction(fgetsPtr, 'pointer', ['pointer', 'int', 'pointer']);
-        Interceptor.replace(fgetsPtr, new NativeCallback(function (buffer, size, fp) {
-            if (null == this) {
-                return 0;
-            }
+        Interceptor.replace(fgetsPtr, new NativeCallback(function (buffer, size, fp) : NativePointer {
             var logTag = null;
             // 进入时先记录现场
             const lr = FCCommon.getLR(this.context);

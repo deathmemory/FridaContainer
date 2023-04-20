@@ -6,6 +6,7 @@
  * @desc:
  */
 import {FCCommon} from "../../FCCommon";
+import {Jni} from "../jnimgr";
 
 class BacktraceJSONContainer {
     public readonly address: NativePointer;
@@ -14,7 +15,7 @@ class BacktraceJSONContainer {
 
     // public readonly symbol: DebugSymbol | null;
 
-    public constructor (
+    public constructor(
         address: NativePointer,
         module: Module | null,
         // symbol: DebugSymbol | null
@@ -50,8 +51,7 @@ export class MethodData {
         let addr = FCCommon.getLR(ctx);
         if (ptr(0) != addr) {
             this.backtrace = [new BacktraceJSONContainer(addr, Process.findModuleByAddress(addr))];
-        }
-        else {
+        } else {
             this.backtrace = [];
         }
 
@@ -86,8 +86,7 @@ export class MethodData {
         if (type.endsWith('*')) {
             if (type.startsWith('char')) {
                 return ptr.readCString();
-            }
-            else if (type.startsWith('jchar')) {
+            } else if (type.startsWith('jchar')) {
                 let res = null;
                 try {
                     let tmp = ptr.readUtf16String();
@@ -108,23 +107,48 @@ export class MethodData {
                 } catch (e) {
                 }
                 return res == null ? "" : res;
-            }
-            else {
+            } else {
                 try {
                     return ptr.readPointer();
                 } catch (e) {
                     return ptr;
                 }
             }
-        }
-        else {
+        } else {
             if ('jstring' === type) {
                 return Java.vm.getEnv().stringFromJni(ptr);
-            }
-            else if ('jclass' === type) {
+            } else if ('jclass' === type) {
                 return Java.vm.getEnv().getClassName(ptr);
+            } else if ('jobject' === type) {
+                return MethodData.printJObjectAsString(ptr);
+            } else if ('jmethodID' === type) {
+                let res = Jni.getMethodInfo(ptr);
+                if (undefined != res) {
+                    return JSON.stringify(res);
+                }
+                else {
+                    return ptr;
+                }
             }
             return ptr;
+        }
+    }
+
+    // 传入一个 jobject 对象，尝试将其转换为 string 并打印
+    static printJObjectAsString(obj: any): any {
+        try {
+            const javaObject = Java.cast(obj, Java.use("java.lang.Object"));
+            // console.log('javaObject getClass: ' + javaObject.getClass().getName());
+            if (javaObject.getClass().getName() === "java.lang.String") {
+                // console.log('javaString: ' + javaObject);
+                return javaObject.toString();
+            } else {
+                return `val: ${obj}, class: ${javaObject.getClass().getName()}`;
+            }
+        } catch (e) {
+            // @ts-ignore
+            console.error("Error converting jobject to string:", e.message);
+            return obj;
         }
     }
 }
