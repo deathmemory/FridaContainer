@@ -107,7 +107,7 @@ export namespace Anti {
             const lr = FCCommon.getLR(this.context);
             // 读取原 buffer
             var retval = fgets(buffer, size, fp);
-            var bufstr = (buffer as NativePointer).readCString();
+            var bufstr = buffer.readCString();
 
             if (null != bufstr) {
                 if (bufstr.indexOf("TracerPid:") > -1) {
@@ -139,7 +139,8 @@ export namespace Anti {
 
                 // frida
                 else if (bufstr.indexOf('frida') > -1) {
-                    buffer.writeUtf8String("");
+                    // 直接回写空有可能引起崩溃
+                    buffer.writeUtf8String("dmemory");
                     logTag = 'frida';
                 }
 
