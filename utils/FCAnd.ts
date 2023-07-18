@@ -786,7 +786,7 @@ export namespace FCAnd {
         if (VERSION.SDK_INT.value <= 23) { // 6.0 以上版本
             dlopenFuncName = "dlopen";
         }
-        Interceptor.attach(Module.findExportByName(null, dlopenFuncName) !, {
+        var so_listener = Interceptor.attach(Module.findExportByName(null, dlopenFuncName) !, {
             onEnter: function (args) {
                 this.sopath = args[0].readCString();
             },
@@ -796,6 +796,7 @@ export namespace FCAnd {
                 if (null != sopath && sopath.indexOf(soname) > -1) {
                     let mod = Module.load(sopath);
                     callback(mod);
+                    so_listener.detach();
                 }
             }
         });
