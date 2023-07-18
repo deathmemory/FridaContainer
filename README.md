@@ -60,7 +60,7 @@ $ python setupAndroid.py
 1. 一键去常规反调试
 2. 打印堆栈
 3. 通用的 Dump dex 方法
-4. 过 ssl pinning
+4. 过 ssl pinning （新增 cronet bypass）
 5. Hook JNI
 6. Java methods trace
 7. JNI trace

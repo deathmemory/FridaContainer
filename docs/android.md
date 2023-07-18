@@ -110,6 +110,13 @@ FCAnd.anti.anti_sslLoadCert("/data/local/tmp/cert-der.crt");
 ```typescript
 FCAnd.anti.anti_ssl_unpinning();
 ```
+## chrome cronet bypass
+
+```typescript
+import {FCAnd} from "./FCAnd";
+
+FCAnd.anti.anti_ssl_cronet_32();
+```
 
 ## Hook JNI
 方便的 JNI Hook

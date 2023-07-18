@@ -9,6 +9,7 @@ import {DMLog} from "../dmlog";
 import {FCCommon} from "../FCCommon";
 import {FCAnd} from "../FCAnd";
 
+
 const sslPinningPass = require("./repinning");
 const unpinning = require("./multi_unpinning");
 
@@ -101,7 +102,7 @@ export namespace Anti {
             return;
         }
         var fgets = new NativeFunction(fgetsPtr, 'pointer', ['pointer', 'int', 'pointer']);
-        Interceptor.replace(fgetsPtr, new NativeCallback(function (buffer, size, fp) : NativePointer {
+        Interceptor.replace(fgetsPtr, new NativeCallback(function (buffer, size, fp): NativePointer {
             var logTag = null;
             // 进入时先记录现场
             const lr = FCCommon.getLR(this.context);
@@ -195,5 +196,45 @@ export namespace Anti {
 
     export function anti_ssl_unpinning() {
         setTimeout(unpinning.multi_unpinning, 0);
+    }
+
+    /**
+     * chrome cronet bypass （针对 32 位）
+     * 定位：".Android" 字符串，向上引用，查找返回值赋值函数。
+     *
+     * 搜索特征：
+     * 01 06 44 BF 6F F0 CE 00  70 47 81 04 44 BF 6F F0
+     * 95 00 70 47 41 01 44 BF  6F F0 D8 00 70 47 41 06
+     * 44 BF 6F F0 CD 00 70 47  41 07 44 BF 6F F0 C9 00
+     * 70 47 C1 07 1C BF 6F F0  C7 00 70 47 C1 01 44 BF
+     */
+    export function anti_ssl_cronet_32() {
+        var moduleName = "libsscronet.so"; // 模块名
+        var searchBytes = '01 06 44 BF 6F F0 CE 00 70 47 81 04 44 BF 6F F0 95 00 70 47 41 01 44 BF 6F F0 D8 00 70 47 41 06 44 BF 6F F0 CD 00 70 47 41 07 44 BF 6F F0 C9 00 70 47 C1 07 1C BF 6F F0 C7 00 70 47 C1 01 44 BF'; // 搜索的特征值
+
+        // 获取模块基址和大小
+        var module = Process.getModuleByName(moduleName);
+        var baseAddr = module.base;
+        var size = module.size;
+
+        // 在模块地址范围内搜索特征值
+        var matches = Memory.scan(baseAddr, size, searchBytes, {
+            onMatch: function (address, size) {
+                DMLog.i("anti_ssl_cronet", "[*] Match found at: " + address);
+                // 将地址转换为静态偏移地址
+                var offset = address.sub(baseAddr);
+                DMLog.i("anti_ssl_cronet", "[+] Static Offset: " + offset);
+                Interceptor.attach(address.or(1), {
+                    onLeave: function (retval) {
+                        retval.replace(ptr(0));
+                        DMLog.w('anti_ssl_cronet retval', 'replace value: ' + retval);
+                    }
+                })
+            },
+            onComplete: function () {
+                DMLog.i("anti_ssl_cronet", "[*] Search completed!");
+            }
+        });
+
     }
 }
