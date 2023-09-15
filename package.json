@@ -16,7 +16,7 @@
   "devDependencies": {
     "@types/frida-gum": "^18.1.0",
     "@types/node": "^18.0.6",
-    "frida-compile": "^15.0.8"
+    "frida-compile": "^10.2.5"
   },
   "dependencies": {
     "@types/base64-js": "^1.3.0",
