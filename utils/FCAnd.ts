@@ -801,4 +801,51 @@ export namespace FCAnd {
             }
         });
     }
+
+    /**
+     * 返回C++方法的 pretty name
+     * 例如：_Z4hahaii -> haha(int, int)
+     * let prettyname = FCAnd.prettyMethod_C("_Z4hahaii");
+     * @param name
+     */
+    export function prettyMethod_C(name: string) {
+        let ptr__cxa_demangle = Module.findExportByName("libc++.so", "__cxa_demangle");
+        if (null == ptr__cxa_demangle) {
+            DMLog.e("libc++.so", "__cxa_demangle not found");
+            return;
+        }
+        let max_size = 0x200;
+        let addr = Memory.alloc(max_size);
+        let buffaddr = Memory.alloc(max_size);
+        let buffsize = Memory.alloc(Process.pointerSize);
+        let status = Memory.alloc(Process.pointerSize);
+
+        addr.writeUtf8String(name);
+        buffsize.writeUInt(max_size);
+        status.writeUInt(0);
+        let func_cxa_demangle = new NativeFunction(ptr__cxa_demangle, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer']);
+        func_cxa_demangle(addr, buffaddr, buffsize, status);
+        let result = buffaddr.readCString();
+        return result;
+    }
+
+    /**
+     * 返回 Java 方法的 pretty name
+     * ar classname = 'java/lang/String';
+     * var env = Java.vm.getEnv();
+     * var cla = env.findClass(classname);
+     * DMLog.i("prettyMethod_Jni", "clazz:" + cla);
+     * var methodId = env.getMethodId(cla, "toString", "()Ljava/lang/String;");
+     * DMLog.i("prettyMethod_Jni", "methodId:" + methodId);
+     * let ptyName = FCAnd.prettyMethod_Jni(methodId, 1);
+     * DMLog.i("prettyMethod_Jni", "prettyMethod_Jni res: " + ptyName);
+     * @param methodId
+     * @param withSignature 1: 包含签名，0: 不包含签名
+     */
+    export function prettyMethod_Jni(methodId: any, withSignature: number) {
+        let result = FCCommon.newStdString();
+        // @ts-ignore
+        Java.api['art::ArtMethod::PrettyMethod'](result, methodId, withSignature);
+        return result.disposeToString();
+    }
 }

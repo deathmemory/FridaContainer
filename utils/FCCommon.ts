@@ -1,4 +1,5 @@
 import {DMLog} from "./dmlog";
+import {StdString} from "./StdString";
 
 /**
  * @author: xingjun.xyf
@@ -234,6 +235,10 @@ export namespace FCCommon {
             }
         }
         return diff_regs;
+    }
+
+    export function newStdString() {
+        return new StdString();
     }
 }
 
