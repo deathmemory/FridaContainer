@@ -98,3 +98,5 @@ $ python setupAndroid.py
 - [art methods tracer](https://github.com/hluwa/ZenTracer)
 - [JNI-Frida-Hook](https://github.com/Areizen/JNI-Frida-Hook)
 - [jnitrace](https://github.com/chame1eon/jnitrace)
+- [frida_hook_libart](https://github.com/lasting-yang/frida_hook_libart)
+
