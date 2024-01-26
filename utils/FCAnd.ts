@@ -397,7 +397,7 @@ export namespace FCAnd {
                                 });
                                 return retval;
                             }
-                        } catch (e : any) {
+                        } catch (e: any) {
                             DMLog.d(tag, 'overload.implementation exception:\t' + overload.methodName + "\t" + e.toString());
                         }
                     });
@@ -469,7 +469,7 @@ export namespace FCAnd {
                     .setLenient()
                     .create();
                 resstr = gson.toJson(obj);
-            } catch (e : any) {
+            } catch (e: any) {
                 DMLog.e('gson.toJson', 'exceipt: ' + e.toString());
                 resstr = FCAnd.parseObject(obj);
             }
@@ -500,7 +500,7 @@ export namespace FCAnd {
                 res[field.getName()] = fdata;
             }
             return JSON.stringify(res);
-        } catch (e : any) {
+        } catch (e: any) {
             return "parseObject except: " + e.toString();
         }
 
@@ -599,7 +599,7 @@ export namespace FCAnd {
                     DMLog.e(tag, `${clsname} not found: ${e}`);
                 }
             }
-        } catch (e : any) {
+        } catch (e: any) {
             DMLog.e(tag, e.toString());
         }
 
@@ -671,7 +671,7 @@ export namespace FCAnd {
                             DMLog.i(tag, '\n');
                             DMLog.i(tag, JSON.stringify(data));
                             FCAnd.showNativeStacks(this.context);
-                        } catch (err : any) {
+                        } catch (err: any) {
                             DMLog.e(tag, err);
                         }
                     },
@@ -758,7 +758,7 @@ export namespace FCAnd {
                         callback(cls1);
                     }
 
-                } catch (e : any) {
+                } catch (e: any) {
                     DMLog.e(tag, e.toString());
                 }
             },
@@ -847,5 +847,29 @@ export namespace FCAnd {
         // @ts-ignore
         Java.api['art::ArtMethod::PrettyMethod'](result, methodId, withSignature);
         return result.disposeToString();
+    }
+
+    export function getProcessName() {
+        var openPtr = Module.getExportByName('libc.so', 'open');
+        var open = new NativeFunction(openPtr, 'int', ['pointer', 'int']);
+
+        var readPtr = Module.getExportByName("libc.so", "read");
+        var read = new NativeFunction(readPtr, "int", ["int", "pointer", "int"]);
+
+        var closePtr = Module.getExportByName('libc.so', 'close');
+        var close = new NativeFunction(closePtr, 'int', ['int']);
+
+        var path = Memory.allocUtf8String("/proc/self/cmdline");
+        var fd = open(path, 0);
+        if (fd != -1) {
+            var buffer = Memory.alloc(0x1000);
+
+            var readsize = read(fd, buffer, 0x1000);
+            close(fd);
+            let result = buffer.readCString();
+            return result;
+        }
+
+        return null;
     }
 }
