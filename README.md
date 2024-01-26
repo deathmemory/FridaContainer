@@ -93,10 +93,14 @@ $ python setupAndroid.py
 由于引用较多，且时间比较久了，也很难都列出来，以后慢慢列举吧。
 感谢无私的代码分享者们。
 
+<details>
+<summary>感谢参考与引用</summary>
+
 - [universal-android-ssl-pinning-bypass-with-frida](https://codeshare.frida.re/@pcipolloni/universal-android-ssl-pinning-bypass-with-frida/)
 - [rida-multiple-unpinning](https://codeshare.frida.re/@akabe1/frida-multiple-unpinning/)
 - [art methods tracer](https://github.com/hluwa/ZenTracer)
 - [JNI-Frida-Hook](https://github.com/Areizen/JNI-Frida-Hook)
 - [jnitrace](https://github.com/chame1eon/jnitrace)
 - [frida_hook_libart](https://github.com/lasting-yang/frida_hook_libart)
-
+- [使用Frida简单实现函数粒度脱壳](https://bbs.kanxue.com/thread-260540.htm)
+</details>
