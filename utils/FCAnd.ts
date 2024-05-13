@@ -397,7 +397,8 @@ export namespace FCAnd {
                                 });
                                 return retval;
                             }
-                        } catch (e : any) {
+                        }
+                        catch (e: any) {
                             DMLog.d(tag, 'overload.implementation exception:\t' + overload.methodName + "\t" + e.toString());
                         }
                     });
@@ -434,7 +435,8 @@ export namespace FCAnd {
                             return retval;
                         }
                     });
-                } catch (e) {
+                }
+                catch (e) {
                 }
             }
         }
@@ -457,7 +459,8 @@ export namespace FCAnd {
         let GsonBuilder = null;
         try {
             GsonBuilder = Java.use('com.google.gson.GsonBuilder');
-        } catch (e) {
+        }
+        catch (e) {
             FCAnd.registGson();
             GsonBuilder = Java.use('com.google.gson.GsonBuilder');
         }
@@ -469,7 +472,8 @@ export namespace FCAnd {
                     .setLenient()
                     .create();
                 resstr = gson.toJson(obj);
-            } catch (e : any) {
+            }
+            catch (e: any) {
                 DMLog.e('gson.toJson', 'exceipt: ' + e.toString());
                 resstr = FCAnd.parseObject(obj);
             }
@@ -500,7 +504,8 @@ export namespace FCAnd {
                 res[field.getName()] = fdata;
             }
             return JSON.stringify(res);
-        } catch (e : any) {
+        }
+        catch (e: any) {
             return "parseObject except: " + e.toString();
         }
 
@@ -521,7 +526,8 @@ export namespace FCAnd {
         try {
             let dexpath = '/data/local/tmp/fclibs/gson.jar';
             Java.openClassFile(dexpath).load();
-        } catch (e) {
+        }
+        catch (e) {
             DMLog.e('registGson', 'exception, please try to run `setupAndorid.py`')
         }
 
@@ -569,7 +575,8 @@ export namespace FCAnd {
                     const useCls = clsFactory.use(clsname);
                     DMLog.e('loadClass', 'name: ' + name);
                     callback(useCls);
-                } catch (e) {
+                }
+                catch (e) {
                     DMLog.e('useWhenLoadClass', 'exception: ' + e);
                 }
             }
@@ -595,11 +602,13 @@ export namespace FCAnd {
                     let result = clsFactory.use(clsname);
                     DMLog.w(tag, JSON.stringify(result));
                     callback(result);
-                } catch (e) {
+                }
+                catch (e) {
                     DMLog.e(tag, `${clsname} not found: ${e}`);
                 }
             }
-        } catch (e : any) {
+        }
+        catch (e: any) {
             DMLog.e(tag, e.toString());
         }
 
@@ -622,7 +631,8 @@ export namespace FCAnd {
                 let result = clsFactory.use(clsname);
                 DMLog.w(tag, JSON.stringify(result));
                 callback(result);
-            } catch (e) {
+            }
+            catch (e) {
                 DMLog.e(tag, `${clsname} not found: ${e}`);
             }
         }
@@ -671,7 +681,8 @@ export namespace FCAnd {
                             DMLog.i(tag, '\n');
                             DMLog.i(tag, JSON.stringify(data));
                             FCAnd.showNativeStacks(this.context);
-                        } catch (err : any) {
+                        }
+                        catch (err: any) {
                             DMLog.e(tag, err);
                         }
                     },
@@ -745,6 +756,19 @@ export namespace FCAnd {
      */
     export function enumerateClassLoadersAndUse(clsname: string, callback: (cls: Java.Wrapper) => void) {
         const tag = 'enumerateClassLoadersAndUse';
+        enumerateClassLoadersAndGetFactory(clsname, function (cf) {
+            try {
+                let cls = cf.use(clsname);
+                callback(cls);
+            }
+            catch (e: any) {
+                DMLog.e(tag, `use ${clsname} excepted: ${e}`);
+            }
+        });
+    }
+
+    export function enumerateClassLoadersAndGetFactory(clsname: string, callback: (factory: Java.ClassFactory) => void) {
+        const tag = 'enumerateClassLoadersAndGetFactory';
         Java.enumerateClassLoaders({
             onMatch(loader) {
                 try {
@@ -753,13 +777,11 @@ export namespace FCAnd {
                         DMLog.i(tag, "found cls: " + cls);
 
                         let cf = Java.ClassFactory.get(loader);
-
-                        let cls1 = cf.use(clsname);
-                        callback(cls1);
+                        callback(cf);
                     }
-
-                } catch (e : any) {
-                    DMLog.e(tag, e.toString());
+                }
+                catch (e: any) {
+                    DMLog.w(tag, `classloader: ${loader} not found:${e.toString()}`);
                 }
             },
             onComplete() {
@@ -847,5 +869,22 @@ export namespace FCAnd {
         // @ts-ignore
         Java.api['art::ArtMethod::PrettyMethod'](result, methodId, withSignature);
         return result.disposeToString();
+    }
+
+    /**
+     * 监听 svc 地址调用，并打印堆栈
+     * @param base
+     * @param address_list  需要配合 python/android/search_svc.py 脚本生成的地址列表，传入 address_list
+     *                      例如：['0x4826c', '0x487bc', '0x48dc4', '0x496d4', '0x49880', '0x499d0']
+     */
+    export function watch_svc_address_list(base: NativePointer, address_list: string[]) {
+        address_list.forEach((addr) => {
+            let addr_offset = parseInt(addr, 16);
+            Interceptor.attach(base.add(addr_offset), {
+                onEnter: function (args) {
+                    FCAnd.showNativeStacks(this.context);
+                }
+            });
+        });
     }
 }

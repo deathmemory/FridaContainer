@@ -77,7 +77,7 @@ export namespace FCCommon {
         DMLog.i(tag, "base: " + base + ", size: " + size);
         DMLog.i(tag, "save path: " + savePath);
         Memory.protect(base, size, "rwx");
-        
+
         let readed = base.readByteArray(size);
         try {
             const f = new File(savePath, "wb");
@@ -88,7 +88,8 @@ export namespace FCCommon {
                 }
                 f.close();
             }
-        } catch (e) {
+        }
+        catch (e) {
             const fopen_ptr = Module.getExportByName(null, 'fopen');
             const fwrite_ptr = Module.getExportByName(null, 'fwrite');
             const fclose_ptr = Module.getExportByName(null, 'fclose');
@@ -141,8 +142,8 @@ export namespace FCCommon {
 
     export function arrayBuffer2Hex(buf: any) {
         return [...new Uint8Array(buf)]
-              .map(x => x.toString(16).padStart(2, '0'))
-              .join(' ');
+            .map(x => x.toString(16).padStart(2, '0'))
+            .join(' ');
     }
 
     /**
@@ -240,5 +241,12 @@ export namespace FCCommon {
     export function newStdString() {
         return new StdString();
     }
+
+    // 定义复制文件的函数
+    export function copyFile(srcPath: string, dstPath: string) {
+        let tmp = File.readAllBytes(srcPath);
+        File.writeAllBytes(dstPath, tmp);
+    }
+
 }
 
