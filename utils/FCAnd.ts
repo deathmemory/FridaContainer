@@ -169,6 +169,147 @@ export namespace FCAnd {
         fridaUnpack.unpack_common();
     }
 
+    /**
+     * 以 loadClass 方式 dump dex
+     * 调用 FCAnd.dump_dex_loadAllClass() 即可
+     * 当程序启动完成后，
+     * 调用 rpc.exports.ddc() 即可完成 dump dex
+     */
+    export function dump_dex_loadAllClass() {
+        let tag = 'dd_loadAllClass';
+        var dex_maps: Record<string, number> = {};
+        var module = Process.findModuleByName("libart.so")!;
+        var addr_DefineClass = null;
+        var symbols = module.enumerateSymbols();
+        for (var index = 0; index < symbols.length; index++) {
+            var symbol = symbols[index];
+            var symbol_name = symbol.name;
+            //这个DefineClass的函数签名是Android9的
+            //_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS9_8ClassDefE
+            if (symbol_name.indexOf("ClassLinker") >= 0 &&
+                symbol_name.indexOf("DefineClass") >= 0 &&
+                symbol_name.indexOf("Thread") >= 0 &&
+                symbol_name.indexOf("DexFile") >= 0) {
+                DMLog.i(tag, `${symbol_name} : ${symbol.address}`);
+                addr_DefineClass = symbol.address;
+            }
+        }
+        DMLog.i(tag, `DefineClass: ${addr_DefineClass}`);
+        if (addr_DefineClass) {
+            Interceptor.attach(addr_DefineClass, {
+                onEnter: function (args) {
+                    var dex_file = args[5];
+                    //ptr(dex_file).add(Process.pointerSize) is "const uint8_t* const begin_;"
+                    //ptr(dex_file).add(Process.pointerSize + Process.pointerSize) is "const size_t size_;"
+                    var base = dex_file.add(Process.pointerSize).readPointer();
+                    var size = dex_file.add(Process.pointerSize + Process.pointerSize).readUInt();
+
+                    if (dex_maps[String(base)] == undefined) {
+                        dex_maps[String(base)] = size;
+                        DMLog.i(tag, `hook_dex: ${base}, ${size}`);
+                    }
+                },
+                onLeave: function (retval) {
+                }
+            });
+        }
+
+        function dump_dex() {
+            // load_all_class();
+            loadAllClass2();
+            let tag = 'dump_dex';
+            for (var base in dex_maps) {
+                var size = dex_maps[base];
+                // console.log(base);
+
+                var magic = ptr(base).readCString();
+                if (null != magic && magic.indexOf("dex") == 0) {
+                    var process_name = FCAnd.getProcessName();
+                    DMLog.i(tag, "process_name: " + process_name);
+                    if (process_name != "-1") {
+                        var dex_path = "/data/data/" + process_name + "/files/" + base + "_" + size.toString(16) + ".dex";
+                        DMLog.i(tag, "dex_path: " + dex_path);
+                        var fd = new File(dex_path, "wb");
+                        if (fd && fd != null) {
+                            var dex_buffer = ptr(base).readByteArray(size);
+                            if (null != dex_buffer) {
+                                fd.write(dex_buffer);
+                                fd.flush();
+                            }
+                            fd.close();
+                            DMLog.i(tag, "dump dex success: " + dex_path);
+                        }
+                    }
+                }
+            }
+        }
+
+        function loadAllClass2() {
+            let tag = 'loadAllClass2';
+            Java.perform(function () {
+                DMLog.i(tag, "---------------Java.enumerateClassLoaders");
+                Java.enumerateClassLoadersSync().forEach(function (loader) {
+                    try {
+                        loadAllClassCore(loader);
+                    } catch (e) {
+                        DMLog.e(tag, "Java.enumerateClassLoaders error:" + e);
+                    }
+                });
+            });
+
+            function loadAllClassCore(loader: any) {
+                let tag = 'loadAllClassCore';
+                var clstr = loader.$className.toString();
+                DMLog.i(tag, 'classloader: ' + clstr);
+                var class_BaseDexClassLoader = Java.use("dalvik.system.BaseDexClassLoader");
+                var pathcl = Java.cast(loader, class_BaseDexClassLoader);
+                DMLog.i(tag, ".pathList: " + pathcl.pathList.value);
+                var class_DexPathList = Java.use("dalvik.system.DexPathList");
+                var dexPathList = Java.cast(pathcl.pathList.value, class_DexPathList);
+                DMLog.i(tag, ".dexElements: " + dexPathList.dexElements.value.length);
+
+                var class_DexFile = Java.use("dalvik.system.DexFile");
+                var class_DexPathList_Element = Java.use("dalvik.system.DexPathList$Element");
+                for (var i = 0; i < dexPathList.dexElements.value.length; i++) {
+                    var dexPathList_Element = Java.cast(dexPathList.dexElements.value[i], class_DexPathList_Element);
+                    // console.log(".dexFile:", dexPathList_Element.dexFile.value);
+                    if (dexPathList_Element.dexFile.value) {
+                        //可能为空
+                        var dexFile = Java.cast(dexPathList_Element.dexFile.value, class_DexFile);
+                        var mcookie = dexFile.mCookie.value;
+                        // console.log(".mCookie", dexFile.mCookie.value);
+                        if (dexFile.mInternalCookie.value) {
+                            // console.log(".mInternalCookie", dexFile.mInternalCookie.value);
+                            mcookie = dexFile.mInternalCookie.value;
+                        }
+                        var classNameArr = dexPathList_Element.dexFile.value.getClassNameList(mcookie);
+                        DMLog.i(tag, "DexFile.getClassNameList.length:" + classNameArr.length);
+                        DMLog.i(tag, "     |------------Enumerate ClassName Start");
+                        for (var i = 0; i < classNameArr.length; i++) {
+                            // DMLog.w(tag, "      " + classNameArr[i]);
+                            try {
+                                loader.loadClass(classNameArr[i]);
+                            } catch (e) {
+                                DMLog.w(tag, "loadClass warning:" + e);
+                            }
+                            // if (classNameArr[i].indexOf(TestCalss) > -1) {
+                            //     loadClassAndInvoke(cl, classNameArr[i]);
+                            // }
+                        }
+                        DMLog.i(tag, "     |------------Enumerate ClassName End");
+                    }
+                }
+
+            }
+        }
+
+        rpc.exports = {
+            ddc() {
+                dump_dex();
+            }
+        }
+    }
+
     export function traceLoadlibrary() {
         const dlopen_ptr = Module.findExportByName(null, 'dlopen');
         if (null != dlopen_ptr) {
@@ -869,6 +1010,33 @@ export namespace FCAnd {
         // @ts-ignore
         Java.api['art::ArtMethod::PrettyMethod'](result, methodId, withSignature);
         return result.disposeToString();
+    }
+
+    /**
+     * 获取进程名
+     */
+    export function getProcessName() {
+        var openPtr = Module.getExportByName('libc.so', 'open');
+        var open = new NativeFunction(openPtr, 'int', ['pointer', 'int']);
+
+        var readPtr = Module.getExportByName("libc.so", "read");
+        var read = new NativeFunction(readPtr, "int", ["int", "pointer", "int"]);
+
+        var closePtr = Module.getExportByName('libc.so', 'close');
+        var close = new NativeFunction(closePtr, 'int', ['int']);
+
+        var path = Memory.allocUtf8String("/proc/self/cmdline");
+        var fd = open(path, 0);
+        if (fd != -1) {
+            var buffer = Memory.alloc(0x1000);
+
+            var readsize = read(fd, buffer, 0x1000);
+            close(fd);
+            let result = buffer.readCString();
+            return result;
+        }
+
+        return null;
     }
 
     /**
