@@ -1,3 +1,5 @@
+.idea/*.iml
+.idea/misc.xml
 python/android/tdc_dir
 __handlers__/
 agent/
