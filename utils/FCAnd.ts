@@ -392,6 +392,21 @@ export namespace FCAnd {
         return result;
     }
 
+
+    /**
+     * 打印 java.util.HashMap
+     * @param data
+     */
+    export function printHashMap(data: any) {
+        let result = Java.cast(data, Java.use('java.util.HashMap'));
+        let keys = result.keySet().toArray(); // 获取键集合并转换为数组
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            let value = result.get(key); // 获取对应的值
+            DMLog.i('printHashMap', 'Key: ' + key.toString() + ', Value: ' + value.toString());
+        }
+    }
+
     /**
      * trace java methods 默认类
      */
