@@ -36,10 +36,11 @@ $ python setupAndroid.py
 ```
 
 ### 1.2 作为 npm node 模块使用
+作为 npm ndoe 使用在新版本中会有问题，具体原因目前还没有时间看，建议用上面的源码推荐方式使用。
 
-支持作为 npm node 模拟直接嵌入 typescript 项目中。
+~~支持作为 npm node 模拟直接嵌入 typescript 项目中。~~
 
-[详细引入方式请看这里](docs/use_as_npm_node.md)
+~~[详细引入方式请看这里](docs/use_as_npm_node.md)~~
 
 ### 1.3 赘述几句我当前的使用习惯
 
