@@ -1070,4 +1070,33 @@ export namespace FCAnd {
             });
         });
     }
+
+    export function byteshexdump(bytes: any) {
+        if (!bytes || bytes.length === 0) return;
+    
+        const kHexChars = "0123456789abcdef";
+        let offset = 0;
+        
+        while (offset < bytes.length) {
+            let hex = offset.toString(16).padStart(8, '0') + "  ";
+            let ascii = "";
+    
+            // 处理每行16字节
+            for (let i = 0; i < 16; i++) {
+                if (offset + i < bytes.length) {
+                    const b = bytes[offset + i] & 0xff; // 直接访问数组元素
+                    hex += kHexChars[(b >> 4) & 0x0f] + kHexChars[b & 0x0f] + " ";
+                    ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".";
+                } else {
+                    hex += "   ";
+                    ascii += " ";
+                }
+                // 每8字节加空格分隔
+                if (i === 7) hex += " ";
+            }
+    
+            console.log(hex + " |" + ascii + "|");
+            offset += 16;
+        }
+    }
 }
