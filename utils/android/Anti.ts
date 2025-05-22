@@ -44,12 +44,32 @@ export namespace Anti {
         throw new Error("deprecated method, should use:  FCAnd.useWithInMemoryDexClassLoader");
     }
 
+    export function anti_1__cxa_throw() {
+        const cxa_throw_ptr = Module.findExportByName(null, "__cxa_throw");
+        if (null == cxa_throw_ptr) {
+            DMLog.e('anti_1__cxa_throw', "_ZSt9__throw_1PKc not found");
+            return;
+        }
+        else {
+            DMLog.i('anti_1__cxa_throw', 'addr: ' + cxa_throw_ptr);
+        }
+
+        Interceptor.replace(cxa_throw_ptr, new NativeCallback(function () {
+            DMLog.i('anti_1__cxa_throw', 'Caught __cxa_throw call (preventing exception)');
+            FCAnd.showAllStacks(this.context); // 打印完整堆栈
+            // 可选：模拟返回，避免崩溃
+            // return ...;
+        }, 'void', [])); // 根据实际参数调整类型
+    }
+
+
     export function anti_debug() {
         anti_fgets();
         anti_exit();
         anti_fork();
         anti_kill();
         anti_ptrace();
+        anti_1__cxa_throw();
     }
 
     export function anti_exit() {

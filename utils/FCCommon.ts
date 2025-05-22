@@ -248,5 +248,17 @@ export namespace FCCommon {
         File.writeAllBytes(dstPath, tmp);
     }
 
+    export const NOP_ARM64 = [0x1F, 0x20, 0x03, 0xD5];
+    export function patchCode(addr: any, patchCode: any[]) {
+        // 修改内存权限
+        const pageSize = Process.pageSize;
+        const pageBase = addr.and(ptr((1 << pageSize) - 1).not());
+        Memory.protect(pageBase, pageSize, 'rwx');
+
+        // // 写入 NOP
+        addr.writeByteArray(patchCode);
+        DMLog.d("check_addr", `patch applied at address: ${addr}`);
+    }
+
 }
 

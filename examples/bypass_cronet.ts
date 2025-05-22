@@ -5,7 +5,7 @@ import {FCAnd} from "../utils/FCAnd";
  */
 if (Java.available) {
     Java.perform(() => {
-        FCAnd.whenSoLoad("libsscronet.so", mod => {
+        FCAnd.afterSoLoad("libsscronet.so", mod => {
             FCAnd.anti.anti_ssl_cronet_32();
         });
     });

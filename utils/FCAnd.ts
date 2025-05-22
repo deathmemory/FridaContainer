@@ -27,6 +27,13 @@ export namespace FCAnd {
         });
     }
 
+    export function showAllStacks(context?: any) {
+        if (null != context) {
+            FCAnd.showNativeStacks(context);
+        }
+        FCAnd.showStacks();
+    }
+
     export function hook_uri(bShowStacks: boolean) {
         // android.net.Uri
         const Uri = Java.use('android.net.Uri');
@@ -165,6 +172,46 @@ export namespace FCAnd {
         };
     }
 
+    export function hook_strstr(filters?: string[]) {
+        Interceptor.attach(Module.findExportByName(null, 'strstr')!, {
+            onEnter: function (args) {
+                var p1 = args[1].readCString()!;
+                DMLog.i('strstr', 'args[0]: ' + args[0].readCString());
+                DMLog.i('strstr', 'args[1]: ' + p1 + ", lr: " + FCCommon.getLR(this.context));
+                // 如果模糊匹配 p1 在 filters 数组中
+                if (null != filters && filters.some(filter => p1.indexOf(filter) >= 0)) {
+                    FCAnd.showNativeStacks(this.context);
+                }
+            }
+        })
+    }
+
+    export function hook_fopen() {
+        Interceptor.attach(Module.findExportByName(null, 'fopen')!, {
+            onEnter: function (args) {
+                var pathname = args[0].readCString();
+                this.pathname = pathname;
+            },
+            onLeave: function (retval) {
+                DMLog.i('fopen', `fd: ${retval}, path: ${this.pathname}`);
+            }
+        })
+    }
+
+    export function hook_atoi() {
+        Interceptor.attach(Module.findExportByName(null, 'openat')!, {
+            onEnter: function (args) {
+            },
+            onLeave: function (retval) {
+                retval.replace(ptr(0));
+                DMLog.i('atoi', 'retval: ' + retval);
+                // if (retval.toInt32() > 0) {
+                //     FCAnd.showNativeStacks(this.context);
+                // }
+            }
+        })
+    }
+
     export function dump_dex_common() {
         fridaUnpack.unpack_common();
     }
@@ -251,7 +298,8 @@ export namespace FCAnd {
                 Java.enumerateClassLoadersSync().forEach(function (loader) {
                     try {
                         loadAllClassCore(loader);
-                    } catch (e) {
+                    }
+                    catch (e) {
                         DMLog.e(tag, "Java.enumerateClassLoaders error:" + e);
                     }
                 });
@@ -289,7 +337,8 @@ export namespace FCAnd {
                             // DMLog.w(tag, "      " + classNameArr[i]);
                             try {
                                 loader.loadClass(classNameArr[i]);
-                            } catch (e) {
+                            }
+                            catch (e) {
                                 DMLog.w(tag, "loadClass warning:" + e);
                             }
                             // if (classNameArr[i].indexOf(TestCalss) > -1) {
@@ -947,38 +996,58 @@ export namespace FCAnd {
     }
 
     /**
-     * 当指定 so 加载时，进行 attach
+     * 当指定 so 加载后，进行 attach
      * @param soname
      * @param offsetAddr
      * @param callback
      */
-    export function attachWhenSoLoad(soname: string, offsetAddr: number, callback: InvocationListenerCallbacks | InstructionProbeCallback) {
-        whenSoLoad(soname, function (mod: Module) {
+    export function attachAfterSoLoad(soname: string, offsetAddr: number, callback: InvocationListenerCallbacks | InstructionProbeCallback) {
+        afterSoLoad(soname, function (mod: Module) {
             Interceptor.attach(mod.base.add(offsetAddr), callback);
         });
     }
 
-    export function whenSoLoad(soname: string, callback: (mod: Module) => void) {
+    /**
+     * 当指定 so 映射到内存后，进行 hook
+     * @param soname
+     * @param offsetAddr
+     * @param callback
+     */
+    export function attachBeforeSoCallConstructors(soname: string, offsetAddr: number,  callback: InvocationListenerCallbacks | InstructionProbeCallback ) {
+        beforeSoCallConstructors(soname, (mod) =>  {
+            Interceptor.attach(mod.base.add(offsetAddr), callback);
+        });
+    }
+
+    export function afterSoLoad(soname: string, callback: (mod: Module) => void) {
+        detectSoLoad({
+            onEnter: function (args) {
+                this.sopath = args[0].readCString();
+                DMLog.d('WhenSoLoad dlopen', `entry sopath: ${this.sopath}`);
+            },
+            onLeave: function (retval) {
+                let sopath = this.sopath;
+                DMLog.d('WhenSoLoad dlopen', `res: ${retval}, sopath: ${sopath}`);
+                if (null != sopath && sopath.indexOf(soname) > -1) {
+                    let mod = Module.load(sopath);
+                    callback(mod);
+                    // this.listener.detach();
+                }
+            }
+        });
+    }
+
+    // InvocationListenerCallbacks
+    export function detectSoLoad(callback: InvocationListenerCallbacks) {
         const VERSION = Java.use('android.os.Build$VERSION');
         let dlopenFuncName = "android_dlopen_ext";
         if (VERSION.SDK_INT.value <= 23) { // 6.0 以上版本
             dlopenFuncName = "dlopen";
         }
-        var so_listener = Interceptor.attach(Module.findExportByName(null, dlopenFuncName) !, {
-            onEnter: function (args) {
-                this.sopath = args[0].readCString();
-            },
-            onLeave: function (retval) {
-                let sopath = this.sopath;
-                DMLog.d('WhenSoLoad dlopen', `sopath: ${sopath}`);
-                if (null != sopath && sopath.indexOf(soname) > -1) {
-                    let mod = Module.load(sopath);
-                    callback(mod);
-                    so_listener.detach();
-                }
-            }
-        });
+        var so_listener = Interceptor.attach(Module.findExportByName(null, dlopenFuncName) !, callback);
+        return so_listener;
     }
+
 
     /**
      * 返回C++方法的 pretty name
@@ -1073,30 +1142,207 @@ export namespace FCAnd {
 
     export function byteshexdump(bytes: any) {
         if (!bytes || bytes.length === 0) return;
-    
+
         const kHexChars = "0123456789abcdef";
         let offset = 0;
-        
+
         while (offset < bytes.length) {
             let hex = offset.toString(16).padStart(8, '0') + "  ";
             let ascii = "";
-    
+
             // 处理每行16字节
             for (let i = 0; i < 16; i++) {
                 if (offset + i < bytes.length) {
                     const b = bytes[offset + i] & 0xff; // 直接访问数组元素
                     hex += kHexChars[(b >> 4) & 0x0f] + kHexChars[b & 0x0f] + " ";
                     ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".";
-                } else {
+                }
+                else {
                     hex += "   ";
                     ascii += " ";
                 }
                 // 每8字节加空格分隔
                 if (i === 7) hex += " ";
             }
-    
+
             console.log(hex + " |" + ascii + "|");
             offset += 16;
         }
     }
+
+    export function detect_sscanf() {
+        const sscanf_ptr = Module.findExportByName(null, 'sscanf');
+        if (null == sscanf_ptr) {
+            DMLog.e('sscanf_ptr', "sscanf_ptr is null");
+            return;
+        }
+        Interceptor.attach(sscanf_ptr, {
+            onEnter: function (args) {
+                DMLog.i('sscanf_ptr', 'entry: ' + args[0].readCString());
+                // FCAnd.showAllStacks(this.context);
+            }
+        });
+    }
+
+    export function detect_anti_debug() {
+        function detect_kill() {
+            const kill_ptr = Module.findExportByName(null, 'kill');
+            if (null == kill_ptr) {
+                DMLog.e('kill_ptr', "kill_ptr is null");
+                return;
+            }
+            Interceptor.attach(kill_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('kill_ptr', 'entry');
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+
+        function detect_fgets() {
+            const fgets_ptr = Module.findExportByName(null, 'fgets');
+            if (null == fgets_ptr) {
+                DMLog.e('fgets_ptr', "fgets_ptr is null");
+                return;
+            }
+            Interceptor.attach(fgets_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('fgets_ptr', 'entry');
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+
+        function detect_exit() {
+            const exit_ptr = Module.findExportByName(null, '_exit');
+            if (null == exit_ptr) {
+                DMLog.e('_exit_ptr', "_exit_ptr is null");
+                return;
+            }
+            Interceptor.attach(exit_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('_exit_ptr', 'entry');
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+
+        function detect_fork() {
+            const fork_ptr = Module.findExportByName(null, 'fork');
+            if (null == fork_ptr) {
+                DMLog.e('fork_ptr', "fork_ptr is null");
+                return;
+            }
+            Interceptor.attach(fork_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('fork_ptr', 'entry');
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+
+        function detect_ptrace() {
+            const ptrace_ptr = Module.findExportByName(null, 'ptrace');
+            if (null == ptrace_ptr) {
+                DMLog.e('ptrace_ptr', "ptrace_ptr is null");
+                return;
+            }
+            Interceptor.attach(ptrace_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('ptrace_ptr', 'entry');
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+
+        function detect_1__cxa_throw() {
+            const __cxa_throw_ptr = Module.findExportByName(null, '__cxa_throw');
+            if (null == __cxa_throw_ptr) {
+                DMLog.e('__cxa_throw_ptr', "_cxa_throw_ptr is null");
+                return;
+            }
+            Interceptor.attach(__cxa_throw_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('_cxa_throw_ptr', 'entry');
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+
+        }
+
+        detect_kill();
+        detect_fgets();
+        detect_exit();
+        detect_fork();
+        detect_ptrace();
+        detect_sscanf();
+        detect_1__cxa_throw();
+        // detect_munmap();
+
+        FCAnd.hook_fopen();
+        FCAnd.hook_strstr(['frida']);
+    }
+
+    export function detect_munmap() {
+        let munmap_ptr = Module.findExportByName(null, 'munmap');
+        if (null == munmap_ptr) {
+            DMLog.e('munmap_ptr', "munmap_ptr is null");
+            return;
+        }
+        else {
+            Interceptor.attach(munmap_ptr, {
+                onEnter: function (args) {
+                    DMLog.i('munmap_ptr', 'entry addr: ' + args[0] + ' len: ' + args[1]);
+                    // DMLog.i('munmap_ptr', hexdump(args[0], {length: args[1].toUInt32()}));
+
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+    }
+
+    /**
+     * 监听so的构造函数，在 so .init_array 段函数被调用前 hook
+     * @param soname
+     * @param callback
+     */
+    export function beforeSoCallConstructors(soname: string, callback: (mod: Module) => void) {
+        let linker_module = null;
+        if (Process.pointerSize == 4) {
+            linker_module = Process.findModuleByName("linker");
+        }
+        else if (Process.pointerSize == 8) {
+            linker_module = Process.findModuleByName("linker64");
+        }
+
+        let ccaddr = null;
+        if (linker_module) {
+            let symbols = linker_module.enumerateSymbols();
+            for (let i = 0; i < symbols.length; i++) {
+                var name = symbols[i].name;
+                if (name.indexOf("call_constructors") >= 0) {
+                    ccaddr = symbols[i].address;
+                }
+            }
+        }
+
+        if (ccaddr) {
+            DMLog.i('attachBeforeSoCallConstructors', 'ccaddr: ' + ccaddr);
+            // FCCommon.printModules();
+            let listener = Interceptor.attach(ccaddr, {
+                onEnter: function (args) {
+                    var somod = Process.findModuleByName(soname);
+                    if (null != somod) {
+                        DMLog.i('attachBeforeSoCallConstructors', 'callback before call constructors: ' + soname)
+                        callback(somod)
+                        listener.detach();
+                    }
+                }
+            });
+        }
+        else {
+            DMLog.e('attachBeforeSoCallConstructors', 'addr_call_array not found!');
+        }
+    }
+
 }
