@@ -255,7 +255,7 @@ export namespace FCCommon {
         const pageBase = addr.and(ptr((1 << pageSize) - 1).not());
         Memory.protect(pageBase, pageSize, 'rwx');
 
-        // // 写入 NOP
+        // 写入 NOP
         addr.writeByteArray(patchCode);
         DMLog.d("check_addr", `patch applied at address: ${addr}`);
     }

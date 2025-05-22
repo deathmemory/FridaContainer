@@ -172,14 +172,14 @@ export namespace FCAnd {
         };
     }
 
-    export function hook_strstr(filters?: string[]) {
+    export function hook_strstr(stackFilters?: string[]) {
         Interceptor.attach(Module.findExportByName(null, 'strstr')!, {
             onEnter: function (args) {
                 var p1 = args[1].readCString()!;
                 DMLog.i('strstr', 'args[0]: ' + args[0].readCString());
                 DMLog.i('strstr', 'args[1]: ' + p1 + ", lr: " + FCCommon.getLR(this.context));
                 // 如果模糊匹配 p1 在 filters 数组中
-                if (null != filters && filters.some(filter => p1.indexOf(filter) >= 0)) {
+                if (null != stackFilters && stackFilters.some(filter => p1.indexOf(filter) >= 0)) {
                     FCAnd.showNativeStacks(this.context);
                 }
             }
@@ -1341,7 +1341,7 @@ export namespace FCAnd {
             });
         }
         else {
-            DMLog.e('attachBeforeSoCallConstructors', 'addr_call_array not found!');
+            DMLog.e('attachBeforeSoCallConstructors', 'call constructors not found!');
         }
     }
 
