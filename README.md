@@ -4,6 +4,9 @@ FridaContainer 整合了网上流行的和自己编写的常用的 frida 脚本�
 
 npm build 后，用 Pycharm 打开编辑，可以看到 frida api 代码补全提示。
 
+# 注
+
+frida 17.0.0 以上版本 API 变动较大，将新开分支以支持新版本。
 
 ## 1. 编译和使用
 
