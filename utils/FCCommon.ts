@@ -11,7 +11,7 @@ import {StdString} from "./StdString";
 
 export namespace FCCommon {
 
-    export NOP_ARM64: number[] = [0x1F, 0x20, 0x03, 0xD5];
+    export var NOP_ARM64: number[] = [0x1F, 0x20, 0x03, 0xD5];
 
     /**
      * 打印指定层数的 sp，并输出 module 信息 (如果有）
