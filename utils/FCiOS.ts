@@ -5,6 +5,8 @@
  * @time: 2020/9/16 12:39 PM
  * @desc:
  */
+import ObjC from "frida-objc-bridge"
+
 import {DMLog} from "./dmlog";
 import {AntiIOS} from "./ios/AntiIOS";
 
@@ -99,7 +101,8 @@ export namespace FCiOS {
     }
 
     export function trace_NSLog() {
-        const NSLog_ptr = Module.findExportByName("Foundation", "NSLog");
+        let Foundation = Process.getModuleByName("Foundation");
+        const NSLog_ptr = Foundation.findExportByName("NSLog");
         DMLog.i('NSLog_ptr', 'addr: ' + NSLog_ptr);
         if (NSLog_ptr) {
             Interceptor.attach(NSLog_ptr, {
@@ -109,7 +112,7 @@ export namespace FCiOS {
             });
         }
 
-        const NSLogv_ptr = Module.findExportByName("Foundation", "NSLogv");
+        const NSLogv_ptr = Foundation.findExportByName("NSLogv");
         DMLog.i('NSLogv_ptr', 'addr: ' + NSLogv_ptr);
         if (NSLogv_ptr) {
             Interceptor.attach(NSLogv_ptr, {

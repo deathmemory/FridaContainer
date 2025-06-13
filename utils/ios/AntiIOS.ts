@@ -10,7 +10,7 @@ import {DMLog} from "../dmlog";
 
 export namespace AntiIOS {
     export function anti_ptrace() {
-        var ptrace = Module.findExportByName(null, "ptrace");
+        var ptrace = Module.getGlobalExportByName("ptrace");
         if (null != ptrace) {
             DMLog.i('anti_ptrace', "ptrace addr: " + ptrace);
             Interceptor.replace(ptrace, new NativeCallback(function (p1: any, p2: any, p3: any, p4: any) {

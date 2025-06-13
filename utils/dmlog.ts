@@ -1,3 +1,5 @@
+import Java from "frida-java-bridge"
+
 export class DMLog {
     static bDebug: boolean = true;
 

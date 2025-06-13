@@ -5,6 +5,8 @@
  * @time: 2020/4/16 5:03 PM
  * @desc:
  */
+import Java from "frida-java-bridge"
+
 const fridaUnpack = require('./android/unpack/fridaUnpack');
 import {Anti} from "./android/Anti";
 import {Jni} from "./android/jnimgr";
@@ -173,7 +175,7 @@ export namespace FCAnd {
     }
 
     export function hook_strstr(stackFilters?: string[]) {
-        Interceptor.attach(Module.findExportByName(null, 'strstr')!, {
+        Interceptor.attach(Module.getGlobalExportByName('strstr')!, {
             onEnter: function (args) {
                 var p1 = args[1].readCString()!;
                 DMLog.i('strstr', 'args[0]: ' + args[0].readCString());
@@ -187,7 +189,7 @@ export namespace FCAnd {
     }
 
     export function hook_fopen() {
-        Interceptor.attach(Module.findExportByName(null, 'fopen')!, {
+        Interceptor.attach(Module.getGlobalExportByName('fopen')!, {
             onEnter: function (args) {
                 var pathname = args[0].readCString();
                 this.pathname = pathname;
@@ -199,7 +201,7 @@ export namespace FCAnd {
     }
 
     export function hook_atoi() {
-        Interceptor.attach(Module.findExportByName(null, 'openat')!, {
+        Interceptor.attach(Module.getGlobalExportByName('openat')!, {
             onEnter: function (args) {
             },
             onLeave: function (retval) {
@@ -360,7 +362,7 @@ export namespace FCAnd {
     }
 
     export function traceLoadlibrary() {
-        const dlopen_ptr = Module.findExportByName(null, 'dlopen');
+        const dlopen_ptr = Module.getGlobalExportByName('dlopen');
         if (null != dlopen_ptr) {
             DMLog.i('traceLoadlibrary', 'dlopen_ptr: ' + dlopen_ptr);
             Interceptor.attach(dlopen_ptr, {
@@ -382,7 +384,7 @@ export namespace FCAnd {
     }
 
     export function traceFopen() {
-        const open_ptr = Module.findExportByName(null, 'fopen');
+        const open_ptr = Module.getGlobalExportByName('fopen');
         if (null != open_ptr) {
             DMLog.i('traceFopen', 'fopen_ptr: ' + open_ptr);
             Interceptor.attach(open_ptr, {
@@ -1044,10 +1046,9 @@ export namespace FCAnd {
         if (VERSION.SDK_INT.value <= 23) { // 6.0 以上版本
             dlopenFuncName = "dlopen";
         }
-        var so_listener = Interceptor.attach(Module.findExportByName(null, dlopenFuncName) !, callback);
+        var so_listener = Interceptor.attach(Module.getGlobalExportByName(dlopenFuncName) !, callback);
         return so_listener;
     }
-
 
     /**
      * 返回C++方法的 pretty name
@@ -1056,7 +1057,8 @@ export namespace FCAnd {
      * @param name
      */
     export function prettyMethod_C(name: string) {
-        let ptr__cxa_demangle = Module.findExportByName("libc++.so", "__cxa_demangle");
+
+        let ptr__cxa_demangle = FCCommon.findExportByName("libc++.so", "__cxa_demangle");
         if (null == ptr__cxa_demangle) {
             DMLog.e("libc++.so", "__cxa_demangle not found");
             return;
@@ -1100,13 +1102,14 @@ export namespace FCAnd {
      * 获取进程名
      */
     export function getProcessName() {
-        var openPtr = Module.getExportByName('libc.so', 'open');
+        let libc = Process.getModuleByName('libc.so');
+        var openPtr = libc.getExportByName('open');
         var open = new NativeFunction(openPtr, 'int', ['pointer', 'int']);
 
-        var readPtr = Module.getExportByName("libc.so", "read");
+        var readPtr = libc.getExportByName("read");
         var read = new NativeFunction(readPtr, "int", ["int", "pointer", "int"]);
 
-        var closePtr = Module.getExportByName('libc.so', 'close');
+        var closePtr = libc.getExportByName('close');
         var close = new NativeFunction(closePtr, 'int', ['int']);
 
         var path = Memory.allocUtf8String("/proc/self/cmdline");
@@ -1171,7 +1174,7 @@ export namespace FCAnd {
     }
 
     export function detect_sscanf() {
-        const sscanf_ptr = Module.findExportByName(null, 'sscanf');
+        const sscanf_ptr = Module.getGlobalExportByName('sscanf');
         if (null == sscanf_ptr) {
             DMLog.e('sscanf_ptr', "sscanf_ptr is null");
             return;
@@ -1186,7 +1189,7 @@ export namespace FCAnd {
 
     export function detect_anti_debug() {
         function detect_kill() {
-            const kill_ptr = Module.findExportByName(null, 'kill');
+            const kill_ptr = Module.getGlobalExportByName('kill');
             if (null == kill_ptr) {
                 DMLog.e('kill_ptr', "kill_ptr is null");
                 return;
@@ -1200,7 +1203,7 @@ export namespace FCAnd {
         }
 
         function detect_fgets() {
-            const fgets_ptr = Module.findExportByName(null, 'fgets');
+            const fgets_ptr = Module.getGlobalExportByName('fgets');
             if (null == fgets_ptr) {
                 DMLog.e('fgets_ptr', "fgets_ptr is null");
                 return;
@@ -1214,7 +1217,7 @@ export namespace FCAnd {
         }
 
         function detect_exit() {
-            const exit_ptr = Module.findExportByName(null, '_exit');
+            const exit_ptr = Module.getGlobalExportByName('_exit');
             if (null == exit_ptr) {
                 DMLog.e('_exit_ptr', "_exit_ptr is null");
                 return;
@@ -1228,7 +1231,7 @@ export namespace FCAnd {
         }
 
         function detect_fork() {
-            const fork_ptr = Module.findExportByName(null, 'fork');
+            const fork_ptr = Module.getGlobalExportByName('fork');
             if (null == fork_ptr) {
                 DMLog.e('fork_ptr', "fork_ptr is null");
                 return;
@@ -1242,7 +1245,7 @@ export namespace FCAnd {
         }
 
         function detect_ptrace() {
-            const ptrace_ptr = Module.findExportByName(null, 'ptrace');
+            const ptrace_ptr = Module.getGlobalExportByName('ptrace');
             if (null == ptrace_ptr) {
                 DMLog.e('ptrace_ptr', "ptrace_ptr is null");
                 return;
@@ -1256,7 +1259,7 @@ export namespace FCAnd {
         }
 
         function detect_1__cxa_throw() {
-            const __cxa_throw_ptr = Module.findExportByName(null, '__cxa_throw');
+            const __cxa_throw_ptr = Module.getGlobalExportByName('__cxa_throw');
             if (null == __cxa_throw_ptr) {
                 DMLog.e('__cxa_throw_ptr', "_cxa_throw_ptr is null");
                 return;
@@ -1284,7 +1287,7 @@ export namespace FCAnd {
     }
 
     export function detect_munmap() {
-        let munmap_ptr = Module.findExportByName(null, 'munmap');
+        let munmap_ptr = Module.getGlobalExportByName('munmap');
         if (null == munmap_ptr) {
             DMLog.e('munmap_ptr', "munmap_ptr is null");
             return;

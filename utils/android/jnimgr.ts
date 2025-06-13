@@ -5,6 +5,8 @@
  * @time: 2020/6/18 5:14 PM
  * @desc:
  */
+import Java from "frida-java-bridge"
+
 import {FCCommon} from "../FCCommon"
 import {DMLog} from "../dmlog";
 import {MethodData} from "./jni/method_data";

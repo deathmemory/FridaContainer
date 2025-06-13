@@ -45,7 +45,7 @@ export namespace Anti {
     }
 
     export function anti_1__cxa_throw() {
-        const cxa_throw_ptr = Module.findExportByName(null, "__cxa_throw");
+        const cxa_throw_ptr = Module.getGlobalExportByName("__cxa_throw");
         if (null == cxa_throw_ptr) {
             DMLog.e('anti_1__cxa_throw', "_ZSt9__throw_1PKc not found");
             return;
@@ -73,7 +73,7 @@ export namespace Anti {
     }
 
     export function anti_exit() {
-        const exit_ptr = Module.findExportByName(null, '_exit');
+        const exit_ptr = Module.getGlobalExportByName('_exit');
         DMLog.i('anti_exit', "exit_ptr : " + exit_ptr);
         if (null == exit_ptr) {
             return;
@@ -89,7 +89,7 @@ export namespace Anti {
     }
 
     export function anti_kill() {
-        const kill_ptr = Module.findExportByName(null, 'kill');
+        const kill_ptr = Module.getGlobalExportByName('kill');
         DMLog.i('anti_kill', "kill_ptr : " + kill_ptr);
 
         if (null == kill_ptr) {
@@ -116,7 +116,7 @@ export namespace Anti {
      */
     export function anti_fgets() {
         const tag = 'anti_fgets';
-        const fgetsPtr = Module.findExportByName(null, 'fgets');
+        const fgetsPtr = Module.getGlobalExportByName('fgets');
         DMLog.i(tag, 'fgets addr: ' + fgetsPtr);
         if (null == fgetsPtr) {
             return;
@@ -176,7 +176,7 @@ export namespace Anti {
     }
 
     export function anti_ptrace() {
-        var ptrace = Module.findExportByName(null, "ptrace");
+        var ptrace = Module.getGlobalExportByName("ptrace");
         if (null != ptrace) {
             DMLog.i('anti_ptrace', "ptrace addr: " + ptrace);
             // Interceptor.attach(ptrace, {
@@ -195,7 +195,7 @@ export namespace Anti {
      * 适用于每日优鲜的反调试
      */
     export function anti_fork() {
-        var fork_addr = Module.findExportByName(null, "fork");
+        var fork_addr = Module.getGlobalExportByName("fork");
         DMLog.i('anti_fork', "fork_addr : " + fork_addr);
         if (null != fork_addr) {
             // Interceptor.attach(fork_addr, {

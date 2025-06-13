@@ -11,6 +11,8 @@ import {StdString} from "./StdString";
 
 export namespace FCCommon {
 
+    export NOP_ARM64: number[] = [0x1F, 0x20, 0x03, 0xD5];
+
     /**
      * 打印指定层数的 sp，并输出 module 信息 (如果有）
      * @param {CpuContext} context
@@ -62,6 +64,20 @@ export namespace FCCommon {
         return ptr(0);
     }
 
+
+    export function findExportByName(moduleName: string, exportName: string) {
+        let module = Process.findModuleByName(moduleName);
+        if  (module) {
+            return module.findExportByName(exportName);
+        }
+        return null;
+    }
+
+    export function getExportByName(moduleName: string, exportName: string) {
+        let module = Process.getModuleByName(moduleName);
+        return module.getExportByName(exportName);
+    };
+
     /**
      * dump 指定模块并存储到指定目录
      * @param {string} moduleName
@@ -90,9 +106,9 @@ export namespace FCCommon {
             }
         }
         catch (e) {
-            const fopen_ptr = Module.getExportByName(null, 'fopen');
-            const fwrite_ptr = Module.getExportByName(null, 'fwrite');
-            const fclose_ptr = Module.getExportByName(null, 'fclose');
+            const fopen_ptr = Module.getGlobalExportByName('fopen');
+            const fwrite_ptr = Module.getGlobalExportByName('fwrite');
+            const fclose_ptr = Module.getGlobalExportByName('fclose');
             if (fopen_ptr && fwrite_ptr && fclose_ptr) {
                 const fopen_func = new NativeFunction(fopen_ptr, 'pointer', ['pointer', 'pointer']);
                 const fwrite_func = new NativeFunction(fwrite_ptr, 'int', ['pointer', 'int', 'int', 'pointer']);
@@ -248,7 +264,6 @@ export namespace FCCommon {
         File.writeAllBytes(dstPath, tmp);
     }
 
-    export const NOP_ARM64 = [0x1F, 0x20, 0x03, 0xD5];
     export function patchCode(addr: any, patchCode: any[]) {
         // 修改内存权限
         const pageSize = Process.pageSize;

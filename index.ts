@@ -9,9 +9,12 @@ import {DMLog} from "./utils/dmlog";
 import {FCCommon} from "./utils/FCCommon";
 // import {DianPing} from "./agent/dp/dp";
 import {FCAnd} from "./utils/FCAnd";
+import Java from "frida-java-bridge"
+import ObjC from "frida-objc-bridge"
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer, please add code on the index.ts');
+
     // FCAnd.Anti.anti_ptrace();
     // FCAnd.Anti.anti_fgets();
     // and.anti.Anti.anti_fgets();
