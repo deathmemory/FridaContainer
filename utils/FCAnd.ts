@@ -14,9 +14,9 @@ import {FCCommon} from "./FCCommon";
 import {DMLog} from "./dmlog";
 
 export namespace FCAnd {
-    export const anti = Anti;
-    export const jni = Jni;
-    export const common = FCCommon;
+    export var anti = Anti;
+    export var jni = Jni;
+    export var common = FCCommon;
     var firstdiscovery = false;
 
     export function getStacks() {
@@ -461,7 +461,7 @@ export namespace FCAnd {
     /**
      * trace java methods 默认类
      */
-    export const tjm_default_cls = [
+    export var tjm_default_cls = [
         // 'E:javax.crypto.Cipher',
         // 'E:javax.crypto.spec.SecretKeySpec',
         // 'E:javax.crypto.spec.IvParameterSpec',
@@ -476,7 +476,7 @@ export namespace FCAnd {
     /**
      * trace java methods 对 java.lang.String 类中的默认白名单方法名
      */
-    export const tjm_default_white_detail: any = {
+    export var tjm_default_white_detail: any = {
         /*{ clsname: {white: true/false, methods[a, b, c]} }*/
         'java.lang.String': {white: true, methods: ['toString', 'getBytes']}
     }
