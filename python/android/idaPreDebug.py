@@ -3,8 +3,8 @@ import os
 import time
 
 '''
-@author: xingjun.xyf
-@contact: deathmemory@163.com
+@author: dmemory
+@contact: 
 @file: pass.py
 @time: 2020/11/9 7:43 下午
 @desc: 启动 app 挂起， 附加 IDA 后按回车键继续运行

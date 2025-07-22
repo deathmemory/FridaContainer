@@ -1,7 +1,7 @@
 # encoding: utf-8
 '''
-@author: xingjun.xyf
-@contact: deathmemory@163.com
+@author: dmemory
+@contact: 
 @file: main.py
 @time: 2020/6/8 10:20 AM
 @desc:

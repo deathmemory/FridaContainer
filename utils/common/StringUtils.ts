@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: StringUtils.js
  * @time: 2020/9/15 4:16 PM
  * @desc:

@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: android_dump_module.js
  * @time: 2020/11/12 8:29 下午
  * @desc:

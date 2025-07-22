@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: repinning_test.js
  * @time: 2020/4/11 9:55 PM
  * @desc:

@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: ios_hook_func.js
  * @time: 2020/9/16 12:37 PM
  * @desc:

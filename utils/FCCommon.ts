@@ -2,8 +2,8 @@ import {DMLog} from "./dmlog";
 import {StdString} from "./StdString";
 
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: FCCommon.js
  * @time: 2020/10/13 3:23 PM
  * @desc: 跨平台可通用的方法

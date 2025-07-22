@@ -1,7 +1,7 @@
 # encoding: utf-8
 '''
-@author: xingjun.xyf
-@contact: deathmemory@163.com
+@author: dmemory
+@contact: 
 @file: setupAndorid.py
 @time: 2021/3/18 4:50 下午
 @desc:

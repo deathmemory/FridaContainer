@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: TraceJavaMethods.js
  * @time: 2020/12/10 11:00 上午
  * @desc: trace java methods example

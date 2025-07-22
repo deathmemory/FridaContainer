@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: jnimgr.js
  * @time: 2020/6/18 5:14 PM
  * @desc:

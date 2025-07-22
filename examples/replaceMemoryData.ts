@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: replaceMemoryData.js
  * @time: 2021/8/26 2:34 下午
  * @desc: 内存数据替换
