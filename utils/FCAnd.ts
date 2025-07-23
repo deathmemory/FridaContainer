@@ -1154,6 +1154,7 @@ export namespace FCAnd {
             let addr_offset = parseInt(addr, 16);
             Interceptor.attach(base.add(addr_offset), {
                 onEnter: function (args) {
+                    DMLog.i("watch_svc_address_list", "SVC: " + addr);
                     FCAnd.showNativeStacks(this.context);
                 }
             });
