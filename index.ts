@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: AntiDexLoader.js
  * @time: 2020/4/16 5:03 PM
  * @desc:
@@ -60,6 +60,26 @@ if (Java.available) {
         main();
     });
 }
+
+// 将 FCAnd 挂载到 global 上，使它可以在 Frida REPL 中作为全局对象访问
+// @ts-ignore
+global.fcrepl_android = {
+    touchAddress: function (libname: string, addresses: number[]) {
+        let mod = Process.getModuleByName(libname);
+        for (let i = 0; i < addresses.length; i++) {
+            let addr = mod.base.add(addresses[i]);
+            Interceptor.attach(addr, {
+                onEnter: function (args) {
+                    DMLog.i("fcrepl", "Touch: " + libname + " " + addresses[i].toString(16));
+                    FCAnd.showAllStacks(this.context);
+                }
+            });
+        }
+    },
+    hexdump: function (address: number) {
+        DMLog.i("hexdump", hexdump(ptr(address)));
+    }
+};
 
 if (ObjC.available) {
     DMLog.i("ObjC", "available");

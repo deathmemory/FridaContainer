@@ -1,7 +1,7 @@
 # encoding: utf-8
 '''
-@author: xingjun.xyf
-@contact: deathmemory@163.com
+@author: dmemory
+@contact: 
 @file: bb.py
 @time: 2021/8/6 8:46 下午
 @desc:

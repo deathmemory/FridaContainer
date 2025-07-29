@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: AntiDexLoader.js
  * @time: 2020/4/16 5:03 PM
  * @desc:

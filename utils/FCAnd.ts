@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: AntiDexLoader.js
  * @time: 2020/4/16 5:03 PM
  * @desc:
@@ -395,6 +395,26 @@ export namespace FCAnd {
         }
         else {
             DMLog.e('traceFopen', 'fopen_ptr is null');
+        }
+    }
+
+    export function traceOpen(stackFilter: string) {
+        const open_ptr = Module.findExportByName(null, 'open');
+        if (null != open_ptr) {
+            DMLog.i('traceOpen', 'open_ptr: ' + open_ptr);
+            Interceptor.attach(open_ptr, {
+                onEnter: function (args) {
+                    let file_path = args[0].readCString();
+                    DMLog.i('traceOpen', 'file_path: ' + file_path);
+                    if (null != stackFilter && null != file_path &&
+                        file_path.indexOf(stackFilter) > -1) {
+                        FCAnd.showAllStacks(this.context);
+                    }
+                }
+            });
+        }
+        else {
+            DMLog.e('traceOpen', 'open_ptr is null');
         }
     }
 
@@ -1015,8 +1035,8 @@ export namespace FCAnd {
      * @param offsetAddr
      * @param callback
      */
-    export function attachBeforeSoCallConstructors(soname: string, offsetAddr: number,  callback: InvocationListenerCallbacks | InstructionProbeCallback ) {
-        beforeSoCallConstructors(soname, (mod) =>  {
+    export function attachBeforeSoCallConstructors(soname: string, offsetAddr: number, callback: InvocationListenerCallbacks | InstructionProbeCallback) {
+        beforeSoCallConstructors(soname, (mod) => {
             Interceptor.attach(mod.base.add(offsetAddr), callback);
         });
     }
@@ -1137,6 +1157,7 @@ export namespace FCAnd {
             let addr_offset = parseInt(addr, 16);
             Interceptor.attach(base.add(addr_offset), {
                 onEnter: function (args) {
+                    DMLog.i("watch_svc_address_list", "SVC: " + addr);
                     FCAnd.showNativeStacks(this.context);
                 }
             });
@@ -1346,6 +1367,70 @@ export namespace FCAnd {
         else {
             DMLog.e('attachBeforeSoCallConstructors', 'call constructors not found!');
         }
+    }
+
+    /**
+     * 自己组装格式化输出
+     * exp:
+     * ... after attach function ...
+     * let formatString = this.formatStringPtr.readCString();
+     * const varArgs = [];
+     * let arm64Context = this.context as Arm64CpuContext;
+     * if (arm64Context.x3) varArgs.push(args[3]);
+     * if (arm64Context.x4) varArgs.push(args[4]);
+     * let result = FCAnd.printf_native(this.formatString, ...varArgs);
+     *
+     * todo %02d 这类输出暂不支持，后面经常遇到再说。
+     * @param format
+     * @param args
+     */
+    export function printf_native(format: string, ...args: any[]) {
+        let result = format;
+        let argIndex = 0;
+
+        // 简化的解析，只处理部分常见的格式化符
+        result = result.replace(/%[dlxsuUfFv]/g, (match): string => {
+            if (argIndex >= args.length) return match; // 没有足够的参数
+
+            const arg: NativePointer = args[argIndex++];
+            // DMLog.i("customPrintf", "arg: " + arg)
+            switch (match) {
+                case '%d':
+                case '%ld': // long
+                case '%lld': // long long
+                    return arg.toString(10);
+                case '%x':
+                case '%lx':
+                case '%llx':
+                    return arg.toString(16);
+                case '%p': // Pointer, similar to %lx
+                    return arg.toString(); // NativePointer.toString() will format correctly
+                case '%s':
+                    // 确保 arg 是一个 NativePointer 并且有效
+                    if (arg.isNull()) { // Check for NativePointer methods
+                        return "(null)";
+                    }
+                    try {
+                        let res = arg.readCString();
+                        if (null == res) {
+                            return "";
+                        }
+                        return res;
+                    }
+                    catch (e) {
+                        return `(invalid_string_ptr:${arg})`;
+                    }
+                case '%f': // float/double
+                case '%lf':
+                    return parseFloat(arg.toString()).toString(); // Requires knowing if it's float or double
+                case '%v': // For special cases where v is a type in specific logging
+                    return arg.toString(); // Fallback
+                default:
+                    return match;
+            }
+        });
+
+        return result;
     }
 
 }

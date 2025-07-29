@@ -1,7 +1,7 @@
 # encoding: utf-8
 '''
-@author: xingjun.xyf
-@contact: deathmemory@163.com
+@author: dmemory
+@contact: 
 @file: TraceLogCleaner.py
 @time: 2020/12/15 7:14 下午
 @desc: trace日志清洁工。默认 attach Android 当前打开的应用，接收 trace 内容并按 threadid 分文件记录

@@ -1,6 +1,6 @@
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: method_data.js
  * @time: 2020/12/22 8:51 下午
  * @desc:

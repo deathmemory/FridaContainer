@@ -1,8 +1,8 @@
 import {DMLog} from "../dmlog";
 
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact: 
  * @file: anti.js
  * @time: 2021/12/30 4:37 下午
  * @desc:

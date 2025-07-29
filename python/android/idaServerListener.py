@@ -1,8 +1,8 @@
 # coding=utf-8
 import os
 '''
-@author: xingjun.xyf
-@contact: deathmemory@163.com
+@author: dmemory
+@contact: 
 @file: pass.py
 @time: 2020/11/9 7:43 下午
 @desc: 运行 IDA server 脚本

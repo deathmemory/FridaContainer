@@ -2,8 +2,8 @@ import {DMLog} from "./dmlog";
 import {StdString} from "./StdString";
 
 /**
- * @author: xingjun.xyf
- * @contact: deathmemory@163.com
+ * @author: dmemory
+ * @contact:
  * @file: FCCommon.js
  * @time: 2020/10/13 3:23 PM
  * @desc: 跨平台可通用的方法
@@ -273,6 +273,41 @@ export namespace FCCommon {
         // 写入 NOP
         addr.writeByteArray(patchCode);
         DMLog.d("check_addr", `patch applied at address: ${addr}`);
+    }
+
+    /**
+     * malloc
+     * 解析一下为什么需要封装一下原生调用 malloc 的方法，而不使用 frida 的 Memory.alloc()
+     * 因为 Memory.alloc() 是固定在 frida 私有空间地址下申请堆空间，
+     * 在一些特殊场景下，系统会识别内存地址的范围，会导致 frida 的空间地址范围无法被系统使用，比如：
+     * frida 申请空间为：0x76f4403b00
+     * 系统识别内存地址是：0xb400007773886820
+     * 这里检查了 0xb4... 的内存地址范围，所以需要使用原生的 malloc() 方法，保证了地址在正常范围之内。
+     *
+     * 系统/内核 API 的内存验证与安全边界 (System/Kernel API Memory Validation and Security Boundaries)
+     * 这是问题的核心。 当应用程序通过系统调用（如 openat、read、write 等）将一个内存指针（例如缓冲区地址）传递给内核，
+     * 或者传递给系统内部的核心库（例如 Native 服务、驱动程序）时，这些底层组件会对其进行严格的验证。
+     * 当 0x76f... 这个由 Frida 自身分配的地址被传递给一个系统 API 时，该 API 内部的验证逻辑会判断这个地址不属于它所期望的
+     * “合法”或“标准”的用户空间内存范围，或者不具备特定的权限或来源标记。
+     *
+     * 因此，系统会拒绝使用这个内存地址，表现为函数返回错误（例如 EFAULT 或其他错误码），
+     * 甚至可能触发进程崩溃（例如 SIGSEGV 或 SIGABRT），以防止潜在的安全漏洞或不一致性。
+     * 而 0xb40000... 可能就是系统或应用正常堆分配所在的一个典型地址范围。
+     * @param number
+     */
+    export function malloc(number: number) {
+        let mallocPtr = Module.findExportByName(null, "malloc");
+        if (mallocPtr) {
+            let size = 0x100;
+            let malloc = new NativeFunction(mallocPtr, "pointer", ["size_t"]);
+            let buffer = malloc(size);
+            if (buffer.isNull()) {
+                DMLog.e("malloc", "malloc failed");
+                return null;
+            }
+            return buffer;
+        }
+        return null;
     }
 
 }
