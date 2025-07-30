@@ -399,7 +399,7 @@ export namespace FCAnd {
     }
 
     export function traceOpen(stackFilter: string) {
-        const open_ptr = Module.findExportByName(null, 'open');
+        const open_ptr = Module.getGlobalExportByName('open');
         if (null != open_ptr) {
             DMLog.i('traceOpen', 'open_ptr: ' + open_ptr);
             Interceptor.attach(open_ptr, {

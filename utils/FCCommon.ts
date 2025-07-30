@@ -296,7 +296,7 @@ export namespace FCCommon {
      * @param number
      */
     export function malloc(number: number) {
-        let mallocPtr = Module.findExportByName(null, "malloc");
+        let mallocPtr = Module.getGlobalExportByName("malloc");
         if (mallocPtr) {
             let size = 0x100;
             let malloc = new NativeFunction(mallocPtr, "pointer", ["size_t"]);

@@ -11,9 +11,11 @@ import {FCCommon} from "./utils/FCCommon";
 import {FCAnd} from "./utils/FCAnd";
 import Java from "frida-java-bridge"
 import ObjC from "frida-objc-bridge"
+import {Media_dm_test_for17} from "./agent/mediaprovider/media_dm_test_for17";
 
 function main() {
     DMLog.d('MAIN', 'HELLO FridaContainer, please add code on the index.ts');
+    Media_dm_test_for17.main();
 
     // FCAnd.Anti.anti_ptrace();
     // FCAnd.Anti.anti_fgets();
@@ -63,23 +65,23 @@ if (Java.available) {
 
 // 将 FCAnd 挂载到 global 上，使它可以在 Frida REPL 中作为全局对象访问
 // @ts-ignore
-global.fcrepl_android = {
-    touchAddress: function (libname: string, addresses: number[]) {
-        let mod = Process.getModuleByName(libname);
-        for (let i = 0; i < addresses.length; i++) {
-            let addr = mod.base.add(addresses[i]);
-            Interceptor.attach(addr, {
-                onEnter: function (args) {
-                    DMLog.i("fcrepl", "Touch: " + libname + " " + addresses[i].toString(16));
-                    FCAnd.showAllStacks(this.context);
-                }
-            });
-        }
-    },
-    hexdump: function (address: number) {
-        DMLog.i("hexdump", hexdump(ptr(address)));
-    }
-};
+// global.fcrepl_android = {
+//     touchAddress: function (libname: string, addresses: number[]) {
+//         let mod = Process.getModuleByName(libname);
+//         for (let i = 0; i < addresses.length; i++) {
+//             let addr = mod.base.add(addresses[i]);
+//             Interceptor.attach(addr, {
+//                 onEnter: function (args) {
+//                     DMLog.i("fcrepl", "Touch: " + libname + " " + addresses[i].toString(16));
+//                     FCAnd.showAllStacks(this.context);
+//                 }
+//             });
+//         }
+//     },
+//     hexdump: function (address: number) {
+//         DMLog.i("hexdump", hexdump(ptr(address)));
+//     }
+// };
 
 if (ObjC.available) {
     DMLog.i("ObjC", "available");

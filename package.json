@@ -9,16 +9,16 @@
       "npm run build",
       "tsc"
     ],
-    "build": "frida-compile index.ts -o _fcagent.js",
-    "watch": "frida-compile index.ts -o _fcagent.js -w"
+    "build": "frida-compile index.ts -o _fcagent.js -S -c",
+    "watch": "frida-compile index.ts -o _fcagent.js -S -c -w"
   },
-  "bundleDependencies": false,
+  "bundleDependencies": [],
   "devDependencies": {
     "@types/base64-js": "^1.3.0",
     "@types/frida-gum": "^19.0.0",
     "@types/node": "^18.19.111",
     "frida-compile": "^19.0.4",
-    "frida-java-bridge": "^7.0.1",
+    "frida-java-bridge": "^7.0.7",
     "frida-objc-bridge": "^8.0.5"
   },
   "dependencies": {
