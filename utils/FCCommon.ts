@@ -64,6 +64,17 @@ export namespace FCCommon {
         return ptr(0);
     }
 
+    export function getLrModuleDesc(context: CpuContext) {
+        let lr = FCCommon.getLR(context);
+        var module = Process.findModuleByAddress(lr);
+        if (module) {
+            return `${module.name}!${lr.sub(module.base)}`;
+        }
+        else {
+            return `${lr}`;
+        }
+    }
+
 
     export function findExportByName(moduleName: string, exportName: string) {
         let module = Process.findModuleByName(moduleName);

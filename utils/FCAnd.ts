@@ -177,12 +177,15 @@ export namespace FCAnd {
     export function hook_strstr(stackFilters?: string[]) {
         Interceptor.attach(Module.getGlobalExportByName('strstr')!, {
             onEnter: function (args) {
-                var p1 = args[1].readCString()!;
-                DMLog.i('strstr', 'args[0]: ' + args[0].readCString());
-                DMLog.i('strstr', 'args[1]: ' + p1 + ", lr: " + FCCommon.getLR(this.context));
+                this.p0 = args[0].readCString();
+                this.p1 = args[1].readCString()!;
+                this.lrdesc = FCCommon.getLrModuleDesc(this.context);
+            },
+            onLeave: function (retval) {
+                DMLog.i('strstr', `${retval} = strstr(${this.p0}, ${this.p1}) -> lr: ${this.lrdesc}`);
                 // 如果模糊匹配 p1 在 filters 数组中
-                if (null != stackFilters && stackFilters.some(filter => p1.indexOf(filter) >= 0)) {
-                    FCAnd.showNativeStacks(this.context);
+                if (null != stackFilters && stackFilters.some(filter => this.p1.indexOf(filter) >= 0)) {
+                    FCAnd.showAllStacks(this.context);
                 }
             }
         })
@@ -1231,8 +1234,13 @@ export namespace FCAnd {
             }
             Interceptor.attach(fgets_ptr, {
                 onEnter: function (args) {
-                    DMLog.i('fgets_ptr', 'entry');
-                    FCAnd.showAllStacks(this.context);
+                    this.buff = args[0];
+                    this.lrdesc = FCCommon.getLrModuleDesc(this.context);
+                    // DMLog.i('fgets_ptr', 'entry');
+                    // FCAnd.showAllStacks(this.context);
+                },
+                onLeave: function (retval) {
+                    DMLog.i('fgets_ptr', `${retval} = fgets(${this.buff.readCString()}, ...) -> lr: ${this.lrdesc}`);
                 }
             });
         }
@@ -1294,6 +1302,30 @@ export namespace FCAnd {
 
         }
 
+        function detect_mmap() {
+            // void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+            const mmap_ptr = Module.getGlobalExportByName('mmap');
+            if (null == mmap_ptr) {
+                DMLog.e('mmap_ptr', "mmap_ptr is null");
+                return;
+            }
+            Interceptor.attach(mmap_ptr, {
+                onEnter: function (args) {
+                    this.addr = args[0];
+                    this.length = args[1];
+                    this.prot = args[2];
+                    this.flags = args[3];
+                    this.fd = args[4];
+                    this.offset = args[5];
+                    this.lrdesc = FCCommon.getLrModuleDesc(this.context);
+                },
+                onLeave: function (retval) {
+                    DMLog.i('mmap_ptr', `${retval} = mmap(${this.addr}, ${this.length}, ${this.port}, ${this.flags}, ${this.fd}, ${this.offset}) -> lr: ${this.lrdesc}`);
+                }
+            });
+        }
+
+        // detect_mmap();
         detect_kill();
         detect_fgets();
         detect_exit();
@@ -1304,7 +1336,7 @@ export namespace FCAnd {
         // detect_munmap();
 
         FCAnd.hook_fopen();
-        FCAnd.hook_strstr(['frida']);
+        FCAnd.hook_strstr(['frida', 'gum-js-loop', 'gmain']);
     }
 
     export function detect_munmap() {
